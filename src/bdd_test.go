@@ -14,6 +14,7 @@ import (
 	"github.com/labstack/echo/v4"
 	api "github.com/wepala/blog-aggregator-api/src"
 	blogaggregatormodule "github.com/wepala/blog-aggregator-module"
+	"github.com/wepala/go-testhelpers"
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
@@ -52,6 +53,7 @@ var endpoint string //the endpoint for the request
 var method string//the method of the request
 var e *echo.Echo
 var response *http.Response
+var createdBlog *api.Blog
 
 func aPingbackUrlShouldBeGenerated() error {
 	return godog.ErrPending
@@ -79,7 +81,7 @@ func followsTheBlog(arg1, arg2 string) error {
 func hasABlog(arg1, arg2 string) error {
 	if user,ok := testUsers[arg1]; ok {
 		user.Blog = &TestBlog{
-			Title: arg2,
+			URL: arg2,
 		}
 		testBlogs[arg2] = user.Blog
 		testBlog = user.Blog
@@ -141,7 +143,13 @@ func postsShouldBeCreatedForEachPost() error {
 }
 
 func profilesForTheBlogAuthorsShouldBeCreated() error {
-	return godog.ErrPending
+	if createdBlog == nil {
+		return fmt.Errorf("blog was not created by a previous step")
+	}
+	if len(createdBlog.Authors) == 0 {
+		return fmt.Errorf("expected there to be authors with blog")
+	}
+	return err
 }
 
 func shouldBeRedirectedToTheProfilePageForThatBlog(arg1 string) error {
@@ -214,8 +222,25 @@ func theBlogShouldBeAddedToTheAggregator() error {
 	if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf("expected the status code to be %d, got %d",http.StatusCreated,response.StatusCode)
 	}
-	//TODO check that the blog was added correctly to the projection
-	return nil
+	//check that the blog was added correctly to the projection
+	projections := blogAPI.Application.Projections()
+	if len(projections) == 0 {
+		return fmt.Errorf("there are no projections configured")
+	}
+	projection := projections[0].(*api.GORMProjection)
+	createdBlog, err = projection.GetBlogByURL(request.(*blogaggregatormodule.AddBlogRequest).Url)
+	if err != nil {
+		return err
+	}
+
+	if createdBlog == nil {
+		return fmt.Errorf("blog with urls '%s' does not exist",request.(*blogaggregatormodule.AddBlogRequest).Url)
+	}
+
+	if createdBlog.URL != testBlog.URL {
+		return fmt.Errorf("expected blog url to be %s, got %s",testBlog.URL,createdBlog.URL)
+	}
+	return err
 }
 
 func theFeedDetailsShouldBeExtracted() error {
@@ -236,7 +261,6 @@ func theFeedHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error {
 		<lastBuildDate>Tue, 19 Oct 2004 13:39:14 -0400</lastBuildDate>
 		<itunes:author>Sojourner Truth</itunes:author>
 		<pubDate>Tue, 19 Oct 2004 13:38:55 -0400</pubDate>
-		<webMaster>webmaster@feedforall.com</webMaster>
 		<generator>FeedForAll Beta1 (0.0.1.8)</generator>
 		<image>
 		  <url>http://www.feedforall.com/ffalogo48x48.gif</url>
@@ -298,11 +322,26 @@ func reset(*godog.Scenario) {
 	testUsers = make(map[string]*TestUser)
 	testBlogs = make(map[string]*TestBlog)
 	err = nil
+	createdBlog = nil
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	e = echo.New()
 	blogAPI = &api.API{}
+	blogDataFetched := 0
+	blogAPI.Client = testhelpers.NewTestClient(func(req *http.Request) *http.Response {
+		blogDataFetched += 1
+		//thi is fetching the blog page 
+		if blogDataFetched == 1 {
+			resp := testhelpers.NewBytesResponse(200,[]byte(testBlogPage))
+			resp.Header.Set("Content-Type", "text/html")
+			return resp
+		}
+
+		resp := testhelpers.NewBytesResponse(200,[]byte(testFeed))
+		resp.Header.Set("Content-Type", "application/rss+xml")
+		return resp
+	})
 	weoscontroller.Initialize(e,blogAPI,"../api.yaml")
 
 	ctx.BeforeScenario(reset)
