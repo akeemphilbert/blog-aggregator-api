@@ -15,11 +15,12 @@ import (
 type Blog struct {
 	gorm.Model
 	ID string `gorm:"primarykey"`
-	Title string `json:"title"`
+	Title string `json:"title,omitempty"`
 	Description string `json:"description,omitempty"`
-	URL string `json:"url"`
-	Authors []*Author `json:"authors"`
-	Posts []*Post `json:"posts"`
+	URL string `json:"url,omitempty"`
+	FeedURL string`json:"feedUrl,omitempty"`
+	Authors []*Author `json:"authors,omitempty"`
+	Posts []*Post `json:"posts,omitempty"`
 }
 
 type Author struct {
@@ -61,7 +62,7 @@ func (p *GORMProjection) GetBlogs () ([]*Blog, error) {
 
 func (p *GORMProjection) GetBlogByURL(url string) (*Blog, error) {
 	var blog *Blog
-	if err := p.db.Debug().Preload(clause.Associations).First(&blog,"url = ?",url).Error; err != nil {
+	if err := p.db.Debug().Preload(clause.Associations).First(&blog,"url = ? OR feed_url = ?",url, url).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil,fmt.Errorf("blog '%s' not found",url)
 		}
@@ -101,6 +102,17 @@ func (p *GORMProjection) GetEventHandler() weos.EventHandler {
 			if db.Error != nil {
 				p.logger.Errorf("error creating blog '%s'", err)
 			}
+		case blogaggregatormodule.BLOG_UPDATED:
+			var blog *Blog
+			err := json.Unmarshal(event.Payload,&blog)
+			if err != nil {
+				p.logger.Errorf("error unmarshalling event '%s'",err)
+			}
+			blog.ID = event.Meta.EntityID
+			db := p.db.Model(blog).Updates(blog)
+			if db.Error != nil {
+				p.logger.Errorf("error updating blog '%s'", err)
+			}
 		case blogaggregatormodule.AUTHOR_CREATED:
 			var author *Author
 			err := json.Unmarshal(event.Payload,&author)
@@ -110,6 +122,16 @@ func (p *GORMProjection) GetEventHandler() weos.EventHandler {
 			db := p.db.Create(author)
 			if db.Error != nil {
 				p.logger.Errorf("error creating author '%s'",err)
+			}
+		case blogaggregatormodule.POST_CREATED:
+			var post *Post
+			err := json.Unmarshal(event.Payload,&post)
+			if err != nil {
+				p.logger.Errorf("error unmarshalling event '%s'",err)
+			}
+			db := p.db.Create(post)
+			if db.Error != nil {
+				p.logger.Errorf("error creating post '%s'",err)
 			}
 		}
 	}

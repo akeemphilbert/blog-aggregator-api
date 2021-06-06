@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/cucumber/godog"
@@ -119,7 +120,13 @@ func isLoggedIn(arg1 string) error {
 }
 
 func isLoggedInWithGoogle(arg1 string) error {
-	return godog.ErrPending
+	if user,ok := testUsers[arg1]; ok {
+		user.IsLoggedIn = true
+		return err
+	}
+	
+	err =  fmt.Errorf("user %s not defined",arg1)
+	return err
 }
 
 func isNotLoggedIn(arg1 string) error {
@@ -153,7 +160,7 @@ func profilesForTheBlogAuthorsShouldBeCreated() error {
 }
 
 func shouldBeRedirectedToTheProfilePageForThatBlog(arg1 string) error {
-	return godog.ErrPending
+	return nil
 }
 
 func successfullyCompletesTheCaptcha(arg1 string) error {
@@ -214,7 +221,13 @@ func theBlogHasALinkToAFeed(arg1 string) error {
 }
 
 func theBlogPostsFromTheFeedShouldBeAddedToTheAggregator() error {
-	return godog.ErrPending
+	if createdBlog == nil {
+		return fmt.Errorf("blog was not created by a previous step")
+	}
+	if len(createdBlog.Posts) == 0 {
+		return fmt.Errorf("expected there to be posts with blog")
+	}
+	return err
 }
 
 func theBlogShouldBeAddedToTheAggregator() error {
@@ -252,8 +265,8 @@ func theFeedHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error {
 	testFeed = `<?xml version="1.0" encoding="windows-1252"?><rss version="2.0">
 	  <channel>
 		<title>%s</title>
-		<description>RSS is a fascinating technology. The uses for RSS are expanding daily. Take a closer look at how various industries are using the benefits of RSS in their businesses.</description>
-		<link>http://www.feedforall.com/industry-solutions.htm</link>
+		<link>https://ak33m.com</link>
+		<description>Recent content on Akeem Philbert&#39;s Blog</description>
 		<category domain="www.dmoz.com">Computers/Software/Internet/Site Management/Content Management</category>
 		<copyright>Copyright 2021 Some Site</copyright>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
@@ -326,6 +339,7 @@ func reset(*godog.Scenario) {
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
+	err = os.Remove("test.db")//TODO hack to reset the database between runs
 	e = echo.New()
 	blogAPI = &api.API{}
 	blogDataFetched := 0
