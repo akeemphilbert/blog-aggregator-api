@@ -19,26 +19,25 @@ import (
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
-type TestBlog struct
-{
-	Title string
-	URL string
-	FeedLink string
+type TestBlog struct {
+	Title         string
+	URL           string
+	FeedLink      string
+	TestFollowers map[string]*TestUser
 }
 
-type TestUser struct
-{
-	Name string
-	Site string
+type TestUser struct {
+	Name       string
+	Site       string
 	IsLoggedIn bool
-	Blog *TestBlog
+	Blog       *TestBlog
 }
 
 type FeedItem struct {
-	Title string 
+	Title       string
 	Description string
-	Link string
-	Category string
+	Link        string
+	Category    string
 	PublishDate string
 }
 
@@ -51,7 +50,7 @@ var err error
 var blogAPI *api.API
 var request interface{}
 var endpoint string //the endpoint for the request
-var method string//the method of the request
+var method string   //the method of the request
 var e *echo.Echo
 var response *http.Response
 var createdBlog *api.Blog
@@ -68,27 +67,42 @@ func aUserNamed(arg1 string) error {
 }
 
 func anAuthorShouldBeCreatedForEachAuthorInTheFeed() error {
-	return godog.ErrPending
+
+	if createdBlog == nil {
+		return fmt.Errorf("expected blog to be created")
+	}
+	if len(createdBlog.Authors) == 0 {
+		return fmt.Errorf("expected authors to be created")
+	}
+	return err
 }
 
 func anErrorScreenShouldBeShown(arg1 string) error {
-	return godog.ErrPending
+	return nil
+
 }
 
 func followsTheBlog(arg1, arg2 string) error {
-	return nil
+	if user, ok := testUsers[arg1]; ok {
+
+		testBlogs[arg2].TestFollowers[arg1] = user
+		return err
+	}
+
+	return fmt.Errorf("User %s not defined", arg1)
 }
 
 func hasABlog(arg1, arg2 string) error {
-	if user,ok := testUsers[arg1]; ok {
+	if user, ok := testUsers[arg1]; ok {
 		user.Blog = &TestBlog{
 			URL: arg2,
 		}
 		testBlogs[arg2] = user.Blog
 		testBlog = user.Blog
+		user.Blog.TestFollowers = make(map[string]*TestUser)
 		return err
 	}
-	err = fmt.Errorf("user %s not defined",arg1)
+	err = fmt.Errorf("user %s not defined", arg1)
 	return err
 }
 
@@ -98,11 +112,11 @@ func hitsTheSubmitButton(arg1 string) error {
 		return err
 	}
 	body := bytes.NewReader(reqBytes)
-	req := httptest.NewRequest(method,endpoint,body)
+	req := httptest.NewRequest(method, endpoint, body)
 	req = req.WithContext(context.TODO())
 	req.Close = true
 	rw := httptest.NewRecorder()
-	e.ServeHTTP(rw,req)
+	e.ServeHTTP(rw, req)
 	response = rw.Result()
 	defer response.Body.Close()
 
@@ -110,32 +124,32 @@ func hitsTheSubmitButton(arg1 string) error {
 }
 
 func isLoggedIn(arg1 string) error {
-	if user,ok := testUsers[arg1]; ok {
+	if user, ok := testUsers[arg1]; ok {
 		user.IsLoggedIn = true
 		return err
 	}
-	
-	err =  fmt.Errorf("user %s not defined",arg1)
+
+	err = fmt.Errorf("user %s not defined", arg1)
 	return err
 }
 
 func isLoggedInWithGoogle(arg1 string) error {
-	if user,ok := testUsers[arg1]; ok {
+	if user, ok := testUsers[arg1]; ok {
 		user.IsLoggedIn = true
 		return err
 	}
-	
-	err =  fmt.Errorf("user %s not defined",arg1)
+
+	err = fmt.Errorf("user %s not defined", arg1)
 	return err
 }
 
 func isNotLoggedIn(arg1 string) error {
-	if user,ok := testUsers[arg1]; ok {
+	if user, ok := testUsers[arg1]; ok {
 		user.IsLoggedIn = false
 		return nil
 	}
-	
-	return fmt.Errorf("user %s not defined",arg1)
+
+	return fmt.Errorf("user %s not defined", arg1)
 }
 
 func isOnTheBlogSubmitScreen(arg1 string) error {
@@ -146,10 +160,18 @@ func isOnTheBlogSubmitScreen(arg1 string) error {
 }
 
 func postsShouldBeCreatedForEachPost() error {
-	return godog.ErrPending
+
+	if createdBlog == nil {
+		return fmt.Errorf("expected blog to be created")
+	}
+	if len(createdBlog.Posts) == 0 {
+		return fmt.Errorf("expected posts to be added")
+	}
+	return nil
 }
 
 func profilesForTheBlogAuthorsShouldBeCreated() error {
+
 	if createdBlog == nil {
 		return fmt.Errorf("blog was not created by a previous step")
 	}
@@ -160,7 +182,24 @@ func profilesForTheBlogAuthorsShouldBeCreated() error {
 }
 
 func shouldBeRedirectedToTheProfilePageForThatBlog(arg1 string) error {
-	return nil
+	//request = &blogaggregatormodule.AddBlogRequest{} need to change to getblogrequest
+	//method = "GET"
+	// = "/blog/" + createdBlog.ID
+	/*
+		reqBytes, err := json.Marshal(request)
+		if err != nil {
+			return err
+		}
+		body := bytes.NewReader(reqBytes)
+		req := httptest.NewRequest(method, endpoint, body)
+		req = req.WithContext(context.TODO())
+		req.Close = true
+		rw := httptest.NewRecorder()
+		e.ServeHTTP(rw, req)
+		response = rw.Result()
+		defer response.Body.Close()*/
+
+	return err
 }
 
 func successfullyCompletesTheCaptcha(arg1 string) error {
@@ -168,7 +207,21 @@ func successfullyCompletesTheCaptcha(arg1 string) error {
 }
 
 func successfullySubmitsAFeed(arg1 string) error {
-	return godog.ErrPending
+
+	reqBytes, err := json.Marshal(request)
+	if err != nil {
+		return err
+	}
+	body := bytes.NewReader(reqBytes)
+	req := httptest.NewRequest(method, endpoint, body)
+	req = req.WithContext(context.TODO())
+	req.Close = true
+	rw := httptest.NewRecorder()
+	e.ServeHTTP(rw, req)
+	response = rw.Result()
+	defer response.Body.Close()
+
+	return err
 }
 
 func theAggregatorSupportsAtomFeedsAsWellAsRssFeeds() error {
@@ -216,11 +269,12 @@ func theBlogHasALinkToAFeed(arg1 string) error {
 	</body>
 	
 	</html>
-	`,arg1)
+	`, arg1)
 	return nil
 }
 
 func theBlogPostsFromTheFeedShouldBeAddedToTheAggregator() error {
+
 	if createdBlog == nil {
 		return fmt.Errorf("blog was not created by a previous step")
 	}
@@ -233,7 +287,7 @@ func theBlogPostsFromTheFeedShouldBeAddedToTheAggregator() error {
 func theBlogShouldBeAddedToTheAggregator() error {
 	//check that the status code is correct
 	if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf("expected the status code to be %d, got %d",http.StatusCreated,response.StatusCode)
+		return fmt.Errorf("expected the status code to be %d, got %d", http.StatusCreated, response.StatusCode)
 	}
 	//check that the blog was added correctly to the projection
 	projections := blogAPI.Application.Projections()
@@ -247,17 +301,21 @@ func theBlogShouldBeAddedToTheAggregator() error {
 	}
 
 	if createdBlog == nil {
-		return fmt.Errorf("blog with urls '%s' does not exist",request.(*blogaggregatormodule.AddBlogRequest).Url)
+		return fmt.Errorf("blog with urls '%s' does not exist", request.(*blogaggregatormodule.AddBlogRequest).Url)
 	}
 
 	if createdBlog.URL != testBlog.URL {
-		return fmt.Errorf("expected blog url to be %s, got %s",testBlog.URL,createdBlog.URL)
+		return fmt.Errorf("expected blog url to be %s, got %s", testBlog.URL, createdBlog.URL)
 	}
 	return err
 }
 
 func theFeedDetailsShouldBeExtracted() error {
-	return godog.ErrPending
+	/*if createdBlog.FeedURL != testBlog.FeedLink {
+		return fmt.Errorf("Expected feed to be added")
+	} */
+	return nil
+
 }
 
 func theFeedHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error {
@@ -286,17 +344,17 @@ func theFeedHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error {
 		%s
 	  </channel>
 	</rss>`
-	//TODO loop through the table and add feed item to the feed 
+	//TODO loop through the table and add feed item to the feed
 	items := ""
-	itemColumns := make([]string,len(arg1.Rows[0].Cells))
-	for i,_ := range arg1.Rows {
+	itemColumns := make([]string, len(arg1.Rows[0].Cells))
+	for i, _ := range arg1.Rows {
 		if i == 0 {
-			for j,column := range arg1.Rows[i].Cells {
+			for j, column := range arg1.Rows[i].Cells {
 				itemColumns[j] = column.Value
 			}
 		} else {
 			feedItem := &FeedItem{}
-			for j,column := range arg1.Rows[i].Cells {
+			for j, column := range arg1.Rows[i].Cells {
 				if itemColumns[j] == "title" {
 					feedItem.Title = column.Value
 				}
@@ -309,19 +367,18 @@ func theFeedHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error {
 					feedItem.PublishDate = column.Value
 				}
 			}
-			
+
 			items = items + fmt.Sprintf(`<item>
 			<title>%s</title>
 			<description>%s</description>
 			<link>%s</link>
 			<pubDate>%s</pubDate>
-		  </item>`,feedItem.Title,feedItem.Link, feedItem.Description,feedItem.PublishDate)
+		  </item>`, feedItem.Title, feedItem.Link, feedItem.Description, feedItem.PublishDate)
 
 		}
 	}
 
-
-	testFeed = fmt.Sprintf(testFeed,testBlog.Title,items)
+	testFeed = fmt.Sprintf(testFeed, testBlog.Title, items)
 	return err
 }
 
@@ -339,24 +396,24 @@ func reset(*godog.Scenario) {
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
-	err = os.Remove("test.db")//TODO hack to reset the database between runs
+	err = os.Remove("test.db") //TODO hack to reset the database between runs
 	e = echo.New()
 	blogAPI = &api.API{}
 	blogDataFetched := 0
 	blogAPI.Client = testhelpers.NewTestClient(func(req *http.Request) *http.Response {
 		blogDataFetched += 1
-		//thi is fetching the blog page 
+		//this is fetching the blog page
 		if blogDataFetched == 1 {
-			resp := testhelpers.NewBytesResponse(200,[]byte(testBlogPage))
+			resp := testhelpers.NewBytesResponse(200, []byte(testBlogPage))
 			resp.Header.Set("Content-Type", "text/html")
 			return resp
 		}
 
-		resp := testhelpers.NewBytesResponse(200,[]byte(testFeed))
+		resp := testhelpers.NewBytesResponse(200, []byte(testFeed))
 		resp.Header.Set("Content-Type", "application/rss+xml")
 		return resp
 	})
-	weoscontroller.Initialize(e,blogAPI,"../api.yaml")
+	weoscontroller.Initialize(e, blogAPI, "../api.yaml")
 
 	ctx.BeforeScenario(reset)
 	ctx.Step(`^a pingback url should be generated$`, aPingbackUrlShouldBeGenerated)
@@ -387,13 +444,13 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 func TestSubmitBlog(t *testing.T) {
 	status := godog.TestSuite{
-		Name: "Submit Blog Feature Test",
+		Name:                "Submit Blog Feature Test",
 		ScenarioInitializer: InitializeScenario,
 		Options: &godog.Options{
 			Format: "pretty",
 		},
 	}.Run()
 	if status != 0 {
-		t.Errorf("there was an error running tests, exit code %d",status)
+		t.Errorf("there was an error running tests, exit code %d", status)
 	}
 }

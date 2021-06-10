@@ -32,7 +32,7 @@ Feature: Submit blog to aggregator
     Then the blog should be added to the aggregator
     And profiles for the blog authors should be created
     And the blog posts from the feed should be added to the aggregator
-    And "Francis" should be redirected to the profile page for that blog 
+    And "Akeem" should be redirected to the profile page for that blog 
     
   Scenario: Submitting a blog feed url to aggregator 
     Given "Akeem" is on the blog submit screen

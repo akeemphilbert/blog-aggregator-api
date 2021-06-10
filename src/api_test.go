@@ -35,16 +35,34 @@ func TestBlogAdd(t *testing.T) {
 
 	reqBytes, err := json.Marshal(request)
 	if err != nil {
-		t.Fatalf("error setting up request %s",err)
+		t.Fatalf("error setting up request %s", err)
 	}
 	body := bytes.NewReader(reqBytes)
-	req := httptest.NewRequest("PUT","/body",body)
+	req := httptest.NewRequest("PUT", "/body", body)
 	req = req.WithContext(context.TODO())
 	req.Close = true
 	recorder := httptest.NewRecorder()
-	blogAPI.AddBlog(e.NewContext(req,recorder))
+	blogAPI.AddBlog(e.NewContext(req, recorder))
 
 	if len(dispatcher.DispatchCalls()) == 0 {
 		t.Error("expected a command to be dispatched")
+	}
+}
+
+func TestBlogGet(t *testing.T) {
+	e := echo.New()
+
+	reqBytes, err := json.Marshal(request)
+	if err != nil {
+		t.Fatalf("error setting up request %s", err)
+	}
+	body := bytes.NewReader(reqBytes)
+	req := httptest.NewRequest("GET", "/body", body) //need some clearification on the middle term
+	req = req.WithContext(context.TODO())
+	req.Close = true
+	recorder := httptest.NewRecorder()
+	blog, err := blogAPI.GetBlogByID(e.NewContext(req, recorder))
+	if blog == nil {
+		t.Error(err)
 	}
 }

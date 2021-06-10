@@ -18,10 +18,10 @@ import (
 type API struct {
 	weoscontroller.API
 	Application weos.Application
-	Log weos.Log
-	DB *sql.DB
-	Client *http.Client
-	projection *GORMProjection
+	Log         weos.Log
+	DB          *sql.DB
+	Client      *http.Client
+	projection  *GORMProjection
 }
 
 func (a *API) AddBlog(e echo.Context) error {
@@ -35,8 +35,28 @@ func (a *API) AddBlog(e echo.Context) error {
 	if err != nil {
 		return err
 	}
-	a.Application.Dispatcher().Dispatch(e.Request().Context(),blogaggregatormodule.AddBlogCommand(blogAddRequest.Url))
+	a.Application.Dispatcher().Dispatch(e.Request().Context(), blogaggregatormodule.AddBlogCommand(blogAddRequest.Url))
 	return e.JSON(http.StatusCreated, "Blog Added")
+}
+
+func (a *API) GetBlogByID(e echo.Context) (*Blog, error) {
+	e.Echo().Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowHeaders: []string{"*"},
+		AllowMethods: []string{http.MethodGet},
+	}))
+	blogID := e.Param("id")
+	blog, err := a.projection.GetBlogByID(blogID)
+	if blog.ID == "" {
+		e.Logger().Debugf("no blog exists with id '%s'", blogID)
+		return nil, echo.NewHTTPError(400, "no blog with that id exists")
+	}
+	if err != nil {
+		e.Logger().Debugf("unable to find blog")
+		return nil, echo.NewHTTPError(400, "unable to find blog")
+	}
+	return blog, e.JSON(http.StatusOK, blog)
+
 }
 
 func (a *API) Initialize() error {
@@ -44,7 +64,7 @@ func (a *API) Initialize() error {
 	//initialize app
 	if a.Client == nil {
 		a.Client = &http.Client{
-			Timeout: time.Second*10,
+			Timeout: time.Second * 10,
 		}
 	}
 	a.Application, err = weos.NewApplicationFromConfig(a.Config.ApplicationConfig, a.Log, a.DB, a.Client, nil)
@@ -73,6 +93,6 @@ func (a *API) Initialize() error {
 
 func New(port *string, apiConfig string) {
 	e := echo.New()
-	weoscontroller.Initialize(e,&API{},apiConfig)
-	e.Logger.Fatal(e.Start(":"+*port))
+	weoscontroller.Initialize(e, &API{}, apiConfig)
+	e.Logger.Fatal(e.Start(":" + *port))
 }
