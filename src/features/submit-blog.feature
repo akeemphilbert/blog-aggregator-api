@@ -6,9 +6,9 @@ Feature: Submit blog to aggregator
     And the blog has a link to a feed "https://ak33m.com/index.xml"
     And "Akeem" is logged in
     And the feed has posts
-    | title       | content             | publish date                    |
-    | Post 1      | Lorem Ipsum         | Sat, 27 Mar 2021 17:05:53 -0400 | 
-    | Post 2      | Lorem Ipsum         | Sat, 27 Mar 2021 17:05:53 -0400 | 
+    | title       | content             | publish date                    | tags           | views      |
+    | Post 1      | Lorem Ipsum         | Sat, 27 Mar 2021 17:05:53 -0400 | ar,e-commerce  | 8          |
+    | Post 2      | Lorem Ipsum         | Sat, 27 Mar 2021 17:05:53 -0400 | ar             | 15         |
     And a user named "Francis"
     And "Francis" follows the blog "https://ak33m.com"
     And "Francis" is not logged in 

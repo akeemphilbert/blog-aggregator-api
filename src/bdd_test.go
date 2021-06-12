@@ -8,7 +8,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
@@ -55,6 +58,10 @@ var method string//the method of the request
 var e *echo.Echo
 var response *http.Response
 var createdBlog *api.Blog
+var blogsFixture map[string]*api.Blog
+var selectedCategory string
+var selectedPosts *api.PostList
+var currentDate time.Time
 
 func aPingbackUrlShouldBeGenerated() error {
 	return godog.ErrPending
@@ -330,12 +337,199 @@ func theUrlIsEntered(arg1 string) error {
 	return nil
 }
 
+func aUserMarcus() error {
+	testUsers["Marcus"] = &TestUser{
+		Name: "Marcus",
+	}
+
+	return nil
+}
+
+func marcusHasPermissionsToViewBlogPosts() error {
+	return nil
+}
+
+func marcusSelectsABlogWithId(arg1 string) error {
+	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?blogId=%s",arg1),nil)
+	req = req.WithContext(context.TODO())
+	req.Close = true
+	rw := httptest.NewRecorder()
+	e.ServeHTTP(rw,req)
+	response = rw.Result()
+	defer response.Body.Close()
+
+	return err
+}
+
+func marcusSelectsACategory(arg1 string) error {
+	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?category=%s",arg1),nil)
+	req = req.WithContext(context.TODO())
+	req.Close = true
+	rw := httptest.NewRecorder()
+	e.ServeHTTP(rw,req)
+	response = rw.Result()
+	defer response.Body.Close()
+
+	return err
+}
+
+func marcusShouldSeeAListOfBlogPosts(arg1 *messages.PickleStepArgument_PickleTable) error {
+	//loop through the selected posts and confirm they are in the table
+	itemColumns := make([]string,len(arg1.Rows[0].Cells))
+	rows := arg1.GetRows()
+
+	if response == nil {
+		return fmt.Errorf("expected a http request to be made and a response received")
+	}
+
+	json.NewDecoder(response.Body).Decode(&selectedPosts)
+
+	if selectedPosts == nil {
+		return fmt.Errorf("expected a post list")
+	}
+
+	if len(selectedPosts.Items) != len(rows)-1 {
+		return fmt.Errorf("expected %d posts, got %d",len(rows)-1,len(selectedPosts.Items))
+	}
+
+	for i,row := range rows {
+		if i == 0 {
+			for j,column := range arg1.Rows[i].Cells {
+				itemColumns[j] = column.Value
+			}
+		} else {
+			for j,column := range row.Cells {
+				if itemColumns[j] == "id" {
+					if selectedPosts.Items[i-1].ID != column.GetValue() {
+						return fmt.Errorf("expected '%s' to be '%s', got '%s'","id",column.GetValue(),selectedPosts.Items[i-1].ID)
+					}
+				}
+			}
+		}
+
+	}
+	return nil
+}
+
+func marcusShouldSeePostsDaysFromTheCurrentDate(arg1 int) error {
+	return nil
+}
+
+func marcusViewsPostsByHighestViews() error {
+	return godog.ErrPending
+}
+
+func marcusViewsRecentPosts() error {
+	return godog.ErrPending
+}
+
+func theAggregatorHasBlogs(arg1 *messages.PickleStepArgument_PickleTable) error {
+	itemColumns := make([]string,len(arg1.Rows[0].Cells))
+	for i,_ := range arg1.Rows {
+		if i == 0 {
+			for j,column := range arg1.Rows[i].Cells {
+				itemColumns[j] = column.Value
+			}
+		} else {
+			item := &api.Blog{}
+			for j,column := range arg1.Rows[i].Cells {
+				if itemColumns[j] == "title" {
+					item.Title = column.Value
+				}
+
+				if itemColumns[j] == "url" {
+					item.URL = column.Value
+				}
+
+				if itemColumns[j] == "feedUrl" {
+					item.FeedURL = column.Value
+				}
+
+				if itemColumns[j] == "id" {
+					item.ID = column.Value
+				}
+			}
+			blogsFixture[item.ID] = item
+			//add blogs to database 
+			blogAPI.Application.DB().Create(item)
+		}
+	}
+
+	return nil
+}
+
+func theAggregatorHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error {
+	itemColumns := make([]string,len(arg1.Rows[0].Cells))
+	for i,_ := range arg1.Rows {
+		if i == 0 {
+			for j,column := range arg1.Rows[i].Cells {
+				itemColumns[j] = column.Value
+			}
+		} else {
+			item := &api.Post{}
+			var blogId string
+			var blog *api.Blog
+			var ok bool
+			for j,column := range arg1.Rows[i].Cells {
+				if itemColumns[j] == "title" {
+					item.Title = column.Value
+				}
+
+				if itemColumns[j] == "blogId" {
+					blogId = column.Value
+				}
+
+				if itemColumns[j] == "description" {
+					item.Description = column.Value
+				}
+
+				if itemColumns[j] == "tags" {
+					categories := strings.Split(column.Value,",")
+					for _,category := range categories {
+						item.Categories = append(item.Categories, &api.Category{
+							Title: category,
+						})
+					}
+				}
+
+				if itemColumns[j] == "publishDate" {
+					item.PublishDate, err = time.Parse("Mon, 2 Jan 2006 15:04:05 -0700",column.Value)
+				}
+
+				if itemColumns[j] == "views" {
+					item.Views, err = strconv.Atoi(column.Value)
+				}
+
+				if itemColumns[j] == "id" {
+					item.ID = column.Value
+				}
+			}
+			if blog,ok = blogsFixture[blogId]; !ok {
+				return fmt.Errorf("trying to add posts to blog %s that doesn't exist",blogId)
+			}
+
+			blog.Posts = append(blog.Posts, item)
+		}
+	}
+
+	return nil
+}
+
+func theCurrentDateIs(arg1 string) error {
+	currentDate,err  = time.Parse("Mon, 2 Jan 2006 15:04:05 -0700",arg1)
+	return err
+}
+
 func reset(*godog.Scenario) {
 	testBlog = nil
 	testUsers = make(map[string]*TestUser)
 	testBlogs = make(map[string]*TestBlog)
+	blogsFixture = make(map[string]*api.Blog)
+	selectedPosts = nil
+	selectedCategory = ""
 	err = nil
 	createdBlog = nil
+	currentDate = time.Now()
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
@@ -383,6 +577,17 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the feed details should be extracted$`, theFeedDetailsShouldBeExtracted)
 	ctx.Step(`^the feed has posts$`, theFeedHasPosts)
 	ctx.Step(`^the url "([^"]*)" is entered$`, theUrlIsEntered)
+	ctx.Step(`^a user Marcus$`, aUserMarcus)
+	ctx.Step(`^Marcus has permissions to view blog posts$`, marcusHasPermissionsToViewBlogPosts)
+	ctx.Step(`^Marcus selects a blog with id "([^"]*)"$`, marcusSelectsABlogWithId)
+	ctx.Step(`^Marcus selects a category "([^"]*)"$`, marcusSelectsACategory)
+	ctx.Step(`^Marcus should see a list of blog posts$`, marcusShouldSeeAListOfBlogPosts)
+	ctx.Step(`^Marcus should see posts (\d+) days from the current date$`, marcusShouldSeePostsDaysFromTheCurrentDate)
+	ctx.Step(`^Marcus views posts by highest views$`, marcusViewsPostsByHighestViews)
+	ctx.Step(`^Marcus views recent posts$`, marcusViewsRecentPosts)
+	ctx.Step(`^the aggregator has blogs$`, theAggregatorHasBlogs)
+	ctx.Step(`^the aggregator has posts$`, theAggregatorHasPosts)
+	ctx.Step(`^The current date is "([^"]*)"$`, theCurrentDateIs)
 }
 
 func TestSubmitBlog(t *testing.T) {

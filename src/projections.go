@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	blogaggregatormodule "github.com/wepala/blog-aggregator-module"
 	"github.com/wepala/weos"
@@ -32,10 +33,21 @@ type Author struct {
 
 type Post struct {
 	gorm.Model
+	ID string `gorm:"primarykey"`
 	Title string
 	Description string
 	Content string
 	BlogID string `json:"blogId"`
+	Categories []*Category `json:"categories,omitempty" gorm:"many2many:post_categories;"`
+	PublishDate time.Time
+	Views int
+}
+
+type Category struct {
+	gorm.Model
+	Title string
+	Description string
+	Posts []*Post `json:"posts,omitempty" gorm:"many2many:post_categories;"`
 }
 
 type GORMProjection struct {
@@ -138,7 +150,7 @@ func (p *GORMProjection) GetEventHandler() weos.EventHandler {
 }
 //runs migrations
 func (p *GORMProjection) Migrate(ctx context.Context) error {
-	err := p.db.AutoMigrate(&Blog{},&Post{},&Author{})
+	err := p.db.AutoMigrate(&Blog{},&Post{},&Author{},&Category{})
 	if err != nil {
 		return err
 	}

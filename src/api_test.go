@@ -48,3 +48,18 @@ func TestBlogAdd(t *testing.T) {
 		t.Error("expected a command to be dispatched")
 	}
 }
+
+func TestGetBlogs(t *testing.T) {
+	e := echo.New()
+
+	application := &ApplicationMock{
+	}
+	blogAPI := &api.API{
+		Application: application,
+	}
+	req := httptest.NewRequest("GET","/posts",nil)
+	req = req.WithContext(context.TODO())
+	req.Close = true
+	recorder := httptest.NewRecorder()
+	blogAPI.AddBlog(e.NewContext(req,recorder))
+}

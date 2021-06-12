@@ -577,6 +577,8 @@ github.com/wepala/blog-aggregator-module v0.0.0-20210606190233-53b5e17e27ce h1:e
 github.com/wepala/blog-aggregator-module v0.0.0-20210606190233-53b5e17e27ce/go.mod h1:6Kn7NJopsIRdaevrD43/qgbdoZ7Zd++XVZRWAwzSn0U=
 github.com/wepala/blog-aggregator-module v0.0.0-20210606190913-6594bced9663 h1:XhPsTAY872rIRdK0PFkT3krrxDbfKB34EQ3SauERREc=
 github.com/wepala/blog-aggregator-module v0.0.0-20210606190913-6594bced9663/go.mod h1:6Kn7NJopsIRdaevrD43/qgbdoZ7Zd++XVZRWAwzSn0U=
+github.com/wepala/blog-aggregator-module v0.0.0-20210612161129-a880bae6b675 h1:uO9KpKQvNZGouuKwWrQvrFRhlK4XcmNxNCAlQd4YPYc=
+github.com/wepala/blog-aggregator-module v0.0.0-20210612161129-a880bae6b675/go.mod h1:6Kn7NJopsIRdaevrD43/qgbdoZ7Zd++XVZRWAwzSn0U=
 github.com/wepala/go-testhelpers v0.0.0-20200715110105-55c57c235b75 h1:UVSz1la8eHnFTSC6U+HDbvKbzDtEfcGT5mUZMlhQmho=
 github.com/wepala/go-testhelpers v0.0.0-20200715110105-55c57c235b75/go.mod h1:IhXtGnsGkNrRbBMf7B4KbFwK+ulzVfWrU2BVgHGNED0=
 github.com/wepala/weos v0.0.7-0.20210412165518-da9d1de6f2e6 h1:3ZuZ/T++hc4F/iaRM1R8kf4ZVx9vb7srNoU/UZOYNss=

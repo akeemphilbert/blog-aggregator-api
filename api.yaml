@@ -22,6 +22,34 @@ components:
           type: string
         code:
           type: string
+    Post:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        publishedDate: 
+          type: string
+        views:
+          type: integer
+        categories:
+          type: array
+          items:
+            type: string
+    PostList:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Post"
 x-weos-config:
   logger:
     level: warn
@@ -60,4 +88,36 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
+  /posts:
+    parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: query
+        name: sort
+        schema:
+          type: array
+          items:
+            type: string
+      - in: query
+        name: blogId
+        schema:
+          type: string
+      - in: query
+        name: category
+        schema: 
+          type: string
+    get:
+      operationId: List Posts
+      responses:
+        200:
+          description: List of Posts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostList"
