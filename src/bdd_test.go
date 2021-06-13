@@ -350,7 +350,7 @@ func marcusHasPermissionsToViewBlogPosts() error {
 }
 
 func marcusSelectsABlogWithId(arg1 string) error {
-	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?blogId=%s",arg1),nil)
+	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?blog_id=%s",arg1),nil)
 	req = req.WithContext(context.TODO())
 	req.Close = true
 	rw := httptest.NewRecorder()
@@ -424,6 +424,13 @@ func marcusViewsRecentPosts() error {
 }
 
 func theAggregatorHasBlogs(arg1 *messages.PickleStepArgument_PickleTable) error {
+	//check that the blog was added correctly to the projection
+	projections := blogAPI.Application.Projections()
+	if len(projections) == 0 {
+		return fmt.Errorf("there are no projections configured")
+	}
+	projection := projections[0].(api.Projection)
+	projection.Migrate(context.Background())
 	itemColumns := make([]string,len(arg1.Rows[0].Cells))
 	for i,_ := range arg1.Rows {
 		if i == 0 {
@@ -468,15 +475,20 @@ func theAggregatorHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error 
 		} else {
 			item := &api.Post{}
 			var blogId string
-			var blog *api.Blog
+			
 			var ok bool
 			for j,column := range arg1.Rows[i].Cells {
+				if itemColumns[j] == "id" {
+					item.ID = column.Value
+				}
+
 				if itemColumns[j] == "title" {
 					item.Title = column.Value
 				}
 
 				if itemColumns[j] == "blogId" {
 					blogId = column.Value
+					item.BlogID = blogId
 				}
 
 				if itemColumns[j] == "description" {
@@ -499,18 +511,15 @@ func theAggregatorHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error 
 				if itemColumns[j] == "views" {
 					item.Views, err = strconv.Atoi(column.Value)
 				}
-
-				if itemColumns[j] == "id" {
-					item.ID = column.Value
-				}
 			}
-			if blog,ok = blogsFixture[blogId]; !ok {
+			if _,ok = blogsFixture[blogId]; !ok {
 				return fmt.Errorf("trying to add posts to blog %s that doesn't exist",blogId)
 			}
 
-			blog.Posts = append(blog.Posts, item)
+			blogAPI.Application.DB().Create(item)
 		}
 	}
+	
 
 	return nil
 }
@@ -521,6 +530,7 @@ func theCurrentDateIs(arg1 string) error {
 }
 
 func reset(*godog.Scenario) {
+	os.Remove("test.db")
 	testBlog = nil
 	testUsers = make(map[string]*TestUser)
 	testBlogs = make(map[string]*TestBlog)
@@ -590,9 +600,9 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^The current date is "([^"]*)"$`, theCurrentDateIs)
 }
 
-func TestSubmitBlog(t *testing.T) {
+func TestBDD(t *testing.T) {
 	status := godog.TestSuite{
-		Name: "Submit Blog Feature Test",
+		Name: "BDD Tests",
 		ScenarioInitializer: InitializeScenario,
 		Options: &godog.Options{
 			Format: "pretty",

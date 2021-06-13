@@ -105,7 +105,7 @@ paths:
           items:
             type: string
       - in: query
-        name: blogId
+        name: blog_id
         schema:
           type: string
       - in: query

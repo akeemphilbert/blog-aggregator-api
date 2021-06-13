@@ -13,5 +13,6 @@ require (
 	github.com/wepala/go-testhelpers v0.0.0-20200715110105-55c57c235b75 // indirect
 	github.com/wepala/weos v0.0.7-0.20210606185124-b580934e4c40 // indirect
 	github.com/wepala/weos-controller v0.0.0-20210514150036-b6e958f9fe01 // indirect
+	gorm.io/driver/sqlite v1.1.4 // indirect
 	gorm.io/gorm v1.21.10 // indirect
 )

@@ -1,4 +1,3 @@
-@wip
 Feature: View blog posts
   
   This covers viewing posts from various bloggers as well as filtering posts 
@@ -16,7 +15,7 @@ Feature: View blog posts
     | 1  | 1      | It's Over Magento | Magento Love Hate Relationship | php,e-commerce,magento          | Sat, 27 Mar 2021 17:05:53 -0400 | 1     |
     | 2  | 1      | Viro React        | Viro React - Augmented Reality | react, ar                       | Mon, 13 Apr 2020 15:57:22 -0400 | 2     |
     | 3  | 2      | Lorem Ipsum.      | Dolor                          | ar                              | Sat, 12 Jun 2021 15:57:22 -0400 | 3     |                        
-    
+  @wip  
   Scenario: View posts of a specific blog
     When Marcus selects a blog with id "1"
     Then Marcus should see a list of blog posts 

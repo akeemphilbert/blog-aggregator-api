@@ -1,4 +1,4 @@
-//go:generate moq -pkg api_test -out proejectionmock_test.go . Projection
+//go:generate moq -pkg api_test -out projectionmock_test.go . Projection
 package api
 
 import (
@@ -94,8 +94,35 @@ func (p *GORMProjection) GetBlogByURL(url string) (*Blog, error) {
 }
 //GetPosts get all the posts in the aggregator
 func (p *GORMProjection) GetPosts (page int, limit int, query string, sortOptions *[]string, filterOptions map[string]interface{}) ([]*Post, int64, error) {
-	return nil,0,nil
+	var posts []*Post
+	var count int64
+	result := p.db.Preload("Categories").Scopes(filter(filterOptions),paginate(page,limit)).Find(&posts).Offset(-1).Distinct("posts.id").Count(&count)
+	return posts,count,result.Error
 }
+
+func filter(filter map[string]interface{}) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if filter != nil {
+			return db.Where(filter)
+		}
+		return db
+	}
+}
+
+func paginate(page int, limit int) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		actualLimit := limit
+		actualPage := page
+		if actualLimit == 0 {
+			actualLimit = -1
+		}
+		if actualPage == 0 {
+			actualPage = 1
+		}
+		return db.Offset((page - 1) * limit).Limit(actualLimit)
+	}
+}
+
 
 func (p *GORMProjection) GetEventHandler() weos.EventHandler {
 	return func (event weos.Event) {

@@ -49,8 +49,8 @@ func (a *API) GetPosts (e echo.Context) error {
 	//parse query parameters
 	page, _ = strconv.Atoi(e.QueryParam("page"))
 	limit, _ = strconv.Atoi(e.QueryParam("limit"))
-	if blogId:=e.QueryParam("blogId");blogId != "" {
-		filters["blogId"] = blogId
+	if blogId:=e.QueryParam("blog_id");blogId != "" {
+		filters["blog_id"] = blogId
 	}
 
 	if category:=e.QueryParam("category");category != "" {

@@ -80,12 +80,12 @@ func TestGetBlogs(t *testing.T) {
 			}
 
 			//check filter options are set correctly
-			if filterOption, ok = filterOptions["blogId"]; !ok {
-				t.Fatal("expected the filter option 'blogId' to be set")
+			if filterOption, ok = filterOptions["blog_id"]; !ok {
+				t.Fatal("expected the filter option 'blog_id' to be set")
 			}
 			if blogId,ok := filterOption.(string); ok {
 				if blogId != mockBlogId {
-					t.Errorf("expected the blogId filter value to be '%s', got '%s'",mockBlogId,blogId)
+					t.Errorf("expected the blog_id filter value to be '%s', got '%s'",mockBlogId,blogId)
 				}
 			}
 
@@ -111,7 +111,7 @@ func TestGetBlogs(t *testing.T) {
 	blogAPI := &api.API{
 		Application: application,
 	}
-	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?page=%d&limit=%d&blogId=%s&category=%s",mockPage,mockLimit,mockBlogId,mockCategory),nil)
+	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?page=%d&limit=%d&blog_id=%s&category=%s",mockPage,mockLimit,mockBlogId,mockCategory),nil)
 	req = req.WithContext(context.TODO())
 	req.Close = true
 	recorder := httptest.NewRecorder()
