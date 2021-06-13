@@ -100,9 +100,65 @@ func (p *GORMProjection) GetPosts (page int, limit int, query string, sortOption
 	return posts,count,result.Error
 }
 
+func category(categoryValue interface{}) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if category, ok := categoryValue.(string); ok {
+			db.Joins("left join post_categories on post_id = posts.id").Joins("left join categories on categories.id = post_categories.category_id").Where("categories.title = ?",category)
+		}
+		return db
+	}
+}
+
+func publishDate(startDateValue interface{}, endDateValue interface{}) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if startDateValue != nil && endDateValue != nil {
+			var startDate time.Time
+			var endDate time.Time
+			var err error
+			if sdv, ok := startDateValue.(string); ok {
+				startDate, err = time.Parse("01/02/06",sdv)
+				if err != nil {
+					return db
+				}
+			}
+	
+			if edv, ok := endDateValue.(string); ok {
+				endDate, err = time.Parse("01/02/06",edv)
+				endDate = time.Date(endDate.Year(),endDate.Month(),endDate.Day(),23,59,59,endDate.Nanosecond(),endDate.Location())
+				if err != nil {
+					return db
+				}
+			}
+	
+			db.Where("publish_date BETWEEN ? AND ?", startDate, endDate)
+		}
+		
+		return db
+	}
+}
+
 func filter(filter map[string]interface{}) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if filter != nil {
+			if categoryValue,ok := filter["category"];ok {
+				db.Scopes(category(categoryValue))
+				delete(filter,"category")
+			}
+
+			var startDateValue interface{}
+			var endDateValue interface{}
+			var ok bool
+
+			if startDateValue,ok = filter["start_date"];ok {
+				delete(filter,"start_date")
+			}
+
+			if endDateValue,ok = filter["end_date"];ok {
+				delete(filter,"end_date")
+			}
+			if startDateValue != nil && endDateValue != nil {
+				db.Scopes(publishDate(startDateValue,endDateValue))
+			}
 			return db.Where(filter)
 		}
 		return db

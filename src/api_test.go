@@ -51,7 +51,7 @@ func TestBlogAdd(t *testing.T) {
 	}
 }
 
-func TestGetBlogs(t *testing.T) {
+func TestGetPosts(t *testing.T) {
 	e := echo.New()
 
 	mockPosts := []*api.Post{
@@ -64,6 +64,8 @@ func TestGetBlogs(t *testing.T) {
 	mockLimit := 5
 	mockBlogId := "abcdef"
 	mockCategory := "testing"
+	mockStartDate := "07/10/21"
+	mockEndDate := "06/10/21"
 	var mockPostsResult []*api.Post
 
 	mockProjection := &ProjectionMock{
@@ -98,6 +100,24 @@ func TestGetBlogs(t *testing.T) {
 				}
 			}
 
+			if filterOption, ok = filterOptions["start_date"]; !ok {
+				t.Fatalf("expected the filter option 'start_date' to be set")
+			}
+			if startDate,ok := filterOption.(string); ok {
+				if startDate != mockStartDate {
+					t.Errorf("expected the start_date filter value to be '%s', got '%s'",mockStartDate,startDate)
+				}
+			}
+
+			if filterOption, ok = filterOptions["end_date"]; !ok {
+				t.Fatalf("expected the filter option 'end_date' to be set")
+			}
+			if endDate,ok := filterOption.(string); ok {
+				if endDate != mockEndDate {
+					t.Errorf("expected the start_date filter value to be '%s', got '%s'",mockEndDate,endDate)
+				}
+			}
+
 			mockPostsResult = mockPosts[(page-1)*limit:api.Min(limit*page,len(mockPosts))]
 			return mockPostsResult,int64(len(mockPosts)),nil
 		},
@@ -111,7 +131,7 @@ func TestGetBlogs(t *testing.T) {
 	blogAPI := &api.API{
 		Application: application,
 	}
-	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?page=%d&limit=%d&blog_id=%s&category=%s",mockPage,mockLimit,mockBlogId,mockCategory),nil)
+	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?page=%d&limit=%d&blog_id=%s&category=%s&start_date=%s&end_date=%s",mockPage,mockLimit,mockBlogId,mockCategory,mockStartDate,mockEndDate),nil)
 	req = req.WithContext(context.TODO())
 	req.Close = true
 	recorder := httptest.NewRecorder()

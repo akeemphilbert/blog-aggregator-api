@@ -57,6 +57,14 @@ func (a *API) GetPosts (e echo.Context) error {
 		filters["category"] = category
 	}
 
+	startDate := e.QueryParam("start_date")
+	endDate := e.QueryParam("end_date")
+
+	if startDate != "" && endDate != "" {
+		filters["start_date"] = startDate
+		filters["end_date"] = endDate
+	}
+
 	if page == 0 {
 		page = 1
 	}

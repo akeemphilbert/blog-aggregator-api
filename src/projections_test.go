@@ -3,6 +3,7 @@ package api_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	api "github.com/wepala/blog-aggregator-api/src"
 	"github.com/wepala/weos"
@@ -58,46 +59,67 @@ func TestProjection_GetPosts(t *testing.T) {
 	if db.Error != nil {
 		t.Fatalf("error setting up mock blogs '%s'",db.Error)
 	}
+	//setup some categories
+	categories := []*api.Category{
+		{
+			Title: "ar",
+		},
+		{
+			Title: "vue",
+		},
+		
+	}
+	db.Create(categories)
 	mockPosts := []*api.Post {
 		{
 			ID: "1",
 			Title: "Post 1",
 			BlogID: "123",
+			Categories: categories,
+			PublishDate: time.Now(),
 		},
 		{
 			ID: "2",
 			Title: "Post 2",
 			BlogID: "123",
+			Categories: []*api.Category{categories[0]},
+			PublishDate: time.Now(),
 		},
 		{
 			ID: "3",
 			Title: "Post 3",
 			BlogID: "456",
+			PublishDate: time.Now(),
 		},
 		{
 			ID: "4",
 			Title: "Post 3",
 			BlogID: "123",
+			PublishDate: time.Now().AddDate(0,-2,0),
 		},
 		{
 			ID: "5",
 			Title: "Post 4",
 			BlogID: "123",
+			PublishDate: time.Now().AddDate(0,-2,0),
 		},
 		{
 			ID: "6",
 			Title: "Post 5",
 			BlogID: "123",
+			PublishDate: time.Now().AddDate(0,-2,0),
 		},
 		{
 			ID: "7",
 			Title: "Post 6",
 			BlogID: "123",
+			PublishDate: time.Now().AddDate(0,-2,0),
 		},
 		{
 			ID: "8",
 			Title: "Post 7",
 			BlogID: "123",
+			PublishDate: time.Now().AddDate(0,-2,0),
 		},
 	}
 	db.Create(mockPosts)
@@ -125,7 +147,50 @@ func TestProjection_GetPosts(t *testing.T) {
 			t.Errorf("expected the post in position %d to have title %s, got '%s'",0,mockPosts[3].Title,posts[0].Title)
 		}
 	})
-	
+	t.Run("get posts by category", func(t *testing.T) {
+		//run get posts
+		filters := make(map[string]interface{})
+		filters["category"] = "ar"
+		posts, count, err := projection.GetPosts(1,5,"",nil,filters)
+		if err != nil {
+			t.Fatalf("unexpected error getting posts '%s'",err)
+		}
+		if count != 2 {
+			t.Errorf("expected the number posts to be returned to be %d, got %d",2,count)
+		}
+
+		if len(posts) != 2 {
+			t.Fatalf("expected %d posts to be returned, got %d",2,len(posts))
+		}
+
+		//check that the first result matches the item in the list having accounted for pagination
+		if posts[0].Title != mockPosts[0].Title {
+			t.Errorf("expected the post in position %d to have title %s, got '%s'",0,mockPosts[0].Title,posts[0].Title)
+		}
+	})
+
+	t.Run("get posts between dates", func(t *testing.T) {
+		//run get posts
+		filters := make(map[string]interface{})
+		filters["start_date"] = time.Now().AddDate(0,-1,0).Format("01/02/06")
+		filters["end_date"] = time.Now().Format("01/02/06")
+		posts, count, err := projection.GetPosts(1,2,"",nil,filters)
+		if err != nil {
+			t.Fatalf("unexpected error getting posts '%s'",err)
+		}
+		if count != 3 {
+			t.Errorf("expected the number posts to be returned to be %d, got %d",3,count)
+		}
+
+		if len(posts) != 2 {
+			t.Fatalf("expected %d posts to be returned, got %d",2,len(posts))
+		}
+
+		//check that the first result matches the item in the list having accounted for pagination
+		if posts[0].Title != mockPosts[0].Title {
+			t.Errorf("expected the post in position %d to have title %s, got '%s'",0,mockPosts[0].Title,posts[0].Title)
+		}
+	})
 
 	
 }

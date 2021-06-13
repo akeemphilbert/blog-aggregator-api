@@ -420,7 +420,15 @@ func marcusViewsPostsByHighestViews() error {
 }
 
 func marcusViewsRecentPosts() error {
-	return godog.ErrPending
+	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?start_date=%s&end_date=%s",currentDate.AddDate(0,0,-30).Format("01/02/06"),currentDate.Format("01/02/06")),nil)
+	req = req.WithContext(context.TODO())
+	req.Close = true
+	rw := httptest.NewRecorder()
+	e.ServeHTTP(rw,req)
+	response = rw.Result()
+	defer response.Body.Close()
+
+	return err
 }
 
 func theAggregatorHasBlogs(arg1 *messages.PickleStepArgument_PickleTable) error {
@@ -497,10 +505,12 @@ func theAggregatorHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error 
 
 				if itemColumns[j] == "tags" {
 					categories := strings.Split(column.Value,",")
-					for _,category := range categories {
-						item.Categories = append(item.Categories, &api.Category{
-							Title: category,
-						})
+					for _,categoryValue := range categories {
+						var category *api.Category
+						blogAPI.Application.DB().Where(&api.Category{
+							Title: strings.Trim(categoryValue," "),
+						}).FirstOrCreate(&category)
+						item.Categories = append(item.Categories, category)
 					}
 				}
 
@@ -525,7 +535,7 @@ func theAggregatorHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error 
 }
 
 func theCurrentDateIs(arg1 string) error {
-	currentDate,err  = time.Parse("Mon, 2 Jan 2006 15:04:05 -0700",arg1)
+	currentDate,err  = time.Parse("01/02/06",arg1)
 	return err
 }
 
