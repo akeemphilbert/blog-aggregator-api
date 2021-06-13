@@ -114,6 +114,8 @@ paths:
           type: string
     get:
       operationId: List Posts
+      x-weos-config:
+        handler: GetPosts
       responses:
         200:
           description: List of Posts

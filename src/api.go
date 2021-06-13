@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -37,6 +38,43 @@ func (a *API) AddBlog(e echo.Context) error {
 	}
 	a.Application.Dispatcher().Dispatch(e.Request().Context(),blogaggregatormodule.AddBlogCommand(blogAddRequest.Url))
 	return e.JSON(http.StatusCreated, "Blog Added")
+}
+//Get list of posts. 
+func (a *API) GetPosts (e echo.Context) error {
+	//initialize projection params
+	var lastError error
+	var page int
+	var limit int
+	filters := make(map[string]interface{})
+	//parse query parameters
+	page, _ = strconv.Atoi(e.QueryParam("page"))
+	limit, _ = strconv.Atoi(e.QueryParam("limit"))
+	if blogId:=e.QueryParam("blogId");blogId != "" {
+		filters["blogId"] = blogId
+	}
+
+	if category:=e.QueryParam("category");category != "" {
+		filters["category"] = category
+	}
+
+	if page == 0 {
+		page = 1
+	}
+
+	for _,projection := range a.Application.Projections() {
+		posts, count, err := projection.(Projection).GetPosts(page,limit,"",nil,filters)
+		if err == nil {
+			return e.JSON(http.StatusOK,&PostList{
+				Page: page,
+				Limit: limit,
+				Total: count,
+				Items: posts,
+			})
+		} else {
+			lastError = err
+		}
+	}
+	return lastError
 }
 
 func (a *API) Initialize() error {

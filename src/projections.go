@@ -1,3 +1,4 @@
+//go:generate moq -pkg api_test -out proejectionmock_test.go . Projection
 package api
 
 import (
@@ -12,6 +13,13 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
+
+type Projection interface {
+	weos.Projection
+	GetBlogByID (id string) (*Blog, error)
+	GetBlogByURL(url string) (*Blog, error)
+	GetPosts (page int, limit int, query string, sortOptions *[]string, filterOptions map[string]interface{}) ([]*Post, int64, error)
+}
 
 type Blog struct {
 	gorm.Model
@@ -84,21 +92,9 @@ func (p *GORMProjection) GetBlogByURL(url string) (*Blog, error) {
 	}
 	return blog, nil
 }
-
-func (p *GORMProjection) GetPostsByCategory (id string) ([]*Post, error) {
-	return nil,nil
-}
-
-func (p *GORMProjection) GetPostsByBlog (id string) ([]*Post, error) {
-	return nil,nil
-}
-
-func (p *GORMProjection) GetPostsByAuthor (id string) ([]*Post, error) {
-	return nil,nil
-}
 //GetPosts get all the posts in the aggregator
-func (p *GORMProjection) GetPosts () ([]*Post, error) {
-	return nil,nil
+func (p *GORMProjection) GetPosts (page int, limit int, query string, sortOptions *[]string, filterOptions map[string]interface{}) ([]*Post, int64, error) {
+	return nil,0,nil
 }
 
 func (p *GORMProjection) GetEventHandler() weos.EventHandler {

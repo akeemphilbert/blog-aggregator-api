@@ -1,8 +1,8 @@
 package api
 
 type PostList struct {
-	Limit int
-	Total int
-	Page int
-	Items []*Post
+	Limit int `json:"limit"`
+	Total int64 `json:"total"`
+	Page int `json:"page"`
+	Items []*Post `json:"items"`
 }

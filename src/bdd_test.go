@@ -247,7 +247,7 @@ func theBlogShouldBeAddedToTheAggregator() error {
 	if len(projections) == 0 {
 		return fmt.Errorf("there are no projections configured")
 	}
-	projection := projections[0].(*api.GORMProjection)
+	projection := projections[0].(api.Projection)
 	createdBlog, err = projection.GetBlogByURL(request.(*blogaggregatormodule.AddBlogRequest).Url)
 	if err != nil {
 		return err
