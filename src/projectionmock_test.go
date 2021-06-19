@@ -29,7 +29,7 @@ var _ api.Projection = &ProjectionMock{}
 // 			GetEventHandlerFunc: func() weos.EventHandler {
 // 				panic("mock out the GetEventHandler method")
 // 			},
-// 			GetPostsFunc: func(page int, limit int, query string, sortOptions *[]string, filterOptions map[string]interface{}) ([]*api.Post, int64, error) {
+// 			GetPostsFunc: func(page int, limit int, query string, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*api.Post, int64, error) {
 // 				panic("mock out the GetPosts method")
 // 			},
 // 			MigrateFunc: func(ctx context.Context) error {
@@ -52,7 +52,7 @@ type ProjectionMock struct {
 	GetEventHandlerFunc func() weos.EventHandler
 
 	// GetPostsFunc mocks the GetPosts method.
-	GetPostsFunc func(page int, limit int, query string, sortOptions *[]string, filterOptions map[string]interface{}) ([]*api.Post, int64, error)
+	GetPostsFunc func(page int, limit int, query string, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*api.Post, int64, error)
 
 	// MigrateFunc mocks the Migrate method.
 	MigrateFunc func(ctx context.Context) error
@@ -81,7 +81,7 @@ type ProjectionMock struct {
 			// Query is the query argument value.
 			Query string
 			// SortOptions is the sortOptions argument value.
-			SortOptions *[]string
+			SortOptions map[string]string
 			// FilterOptions is the filterOptions argument value.
 			FilterOptions map[string]interface{}
 		}
@@ -187,7 +187,7 @@ func (mock *ProjectionMock) GetEventHandlerCalls() []struct {
 }
 
 // GetPosts calls GetPostsFunc.
-func (mock *ProjectionMock) GetPosts(page int, limit int, query string, sortOptions *[]string, filterOptions map[string]interface{}) ([]*api.Post, int64, error) {
+func (mock *ProjectionMock) GetPosts(page int, limit int, query string, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*api.Post, int64, error) {
 	if mock.GetPostsFunc == nil {
 		panic("ProjectionMock.GetPostsFunc: method is nil but Projection.GetPosts was just called")
 	}
@@ -195,7 +195,7 @@ func (mock *ProjectionMock) GetPosts(page int, limit int, query string, sortOpti
 		Page          int
 		Limit         int
 		Query         string
-		SortOptions   *[]string
+		SortOptions   map[string]string
 		FilterOptions map[string]interface{}
 	}{
 		Page:          page,
@@ -217,14 +217,14 @@ func (mock *ProjectionMock) GetPostsCalls() []struct {
 	Page          int
 	Limit         int
 	Query         string
-	SortOptions   *[]string
+	SortOptions   map[string]string
 	FilterOptions map[string]interface{}
 } {
 	var calls []struct {
 		Page          int
 		Limit         int
 		Query         string
-		SortOptions   *[]string
+		SortOptions   map[string]string
 		FilterOptions map[string]interface{}
 	}
 	mock.lockGetPosts.RLock()

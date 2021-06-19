@@ -416,7 +416,15 @@ func marcusShouldSeePostsDaysFromTheCurrentDate(arg1 int) error {
 }
 
 func marcusViewsPostsByHighestViews() error {
-	return godog.ErrPending
+	req := httptest.NewRequest("GET","/posts?views=desc",nil)
+	req = req.WithContext(context.TODO())
+	req.Close = true
+	rw := httptest.NewRecorder()
+	e.ServeHTTP(rw,req)
+	response = rw.Result()
+	defer response.Body.Close()
+
+	return err
 }
 
 func marcusViewsRecentPosts() error {
@@ -541,6 +549,7 @@ func theCurrentDateIs(arg1 string) error {
 
 func reset(*godog.Scenario) {
 	os.Remove("test.db")
+	blogAPI.Initialize()
 	testBlog = nil
 	testUsers = make(map[string]*TestUser)
 	testBlogs = make(map[string]*TestBlog)

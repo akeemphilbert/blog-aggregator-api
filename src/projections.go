@@ -18,7 +18,7 @@ type Projection interface {
 	weos.Projection
 	GetBlogByID (id string) (*Blog, error)
 	GetBlogByURL(url string) (*Blog, error)
-	GetPosts (page int, limit int, query string, sortOptions *[]string, filterOptions map[string]interface{}) ([]*Post, int64, error)
+	GetPosts (page int, limit int, query string, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*Post, int64, error)
 }
 
 type Blog struct {
@@ -93,11 +93,25 @@ func (p *GORMProjection) GetBlogByURL(url string) (*Blog, error) {
 	return blog, nil
 }
 //GetPosts get all the posts in the aggregator
-func (p *GORMProjection) GetPosts (page int, limit int, query string, sortOptions *[]string, filterOptions map[string]interface{}) ([]*Post, int64, error) {
+func (p *GORMProjection) GetPosts (page int, limit int, query string, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*Post, int64, error) {
 	var posts []*Post
 	var count int64
-	result := p.db.Preload("Categories").Scopes(filter(filterOptions),paginate(page,limit)).Find(&posts).Offset(-1).Distinct("posts.id").Count(&count)
+	result := p.db.Debug().Preload("Categories").Scopes(filter(filterOptions),paginate(page,limit),sort(sortOptions)).Find(&posts).Offset(-1).Distinct("posts.id").Count(&count)
 	return posts,count,result.Error
+}
+
+func sort(order map[string]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		for key,value := range order {
+			//only support certain values since GORM doesn't protect the order function https://gorm.io/docs/security.html#SQL-injection-Methods
+			if (value != "asc" && value != "desc" && value != "") || (key != "views" && key != "publishDate") {
+				return db
+			}
+			db.Order(key+" "+value)
+		}
+		
+		return db
+	}
 }
 
 func category(categoryValue interface{}) func(db *gorm.DB) *gorm.DB {

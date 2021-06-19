@@ -69,8 +69,9 @@ func TestGetPosts(t *testing.T) {
 	var mockPostsResult []*api.Post
 
 	mockProjection := &ProjectionMock{
-		GetPostsFunc: func(page, limit int, query string, sortOptions *[]string, filterOptions map[string]interface{}) ([]*api.Post, int64, error) {
+		GetPostsFunc: func(page, limit int, query string, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*api.Post, int64, error) {
 			var filterOption interface{}
+			var sortOption string
 			var ok bool
 
 			if page != mockPage {
@@ -117,6 +118,14 @@ func TestGetPosts(t *testing.T) {
 					t.Errorf("expected the start_date filter value to be '%s', got '%s'",mockEndDate,endDate)
 				}
 			}
+			//check sort options 
+			if sortOption,ok = sortOptions["views"]; !ok {
+				t.Fatalf("expected a sort option view to be set")
+			}
+
+			if sortOption != "desc" {
+				t.Errorf("expected the view sort to be '%s', got '%s'","desc",sortOption)
+			}
 
 			mockPostsResult = mockPosts[(page-1)*limit:api.Min(limit*page,len(mockPosts))]
 			return mockPostsResult,int64(len(mockPosts)),nil
@@ -131,7 +140,7 @@ func TestGetPosts(t *testing.T) {
 	blogAPI := &api.API{
 		Application: application,
 	}
-	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?page=%d&limit=%d&blog_id=%s&category=%s&start_date=%s&end_date=%s",mockPage,mockLimit,mockBlogId,mockCategory,mockStartDate,mockEndDate),nil)
+	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?page=%d&limit=%d&blog_id=%s&category=%s&start_date=%s&end_date=%s&views=desc",mockPage,mockLimit,mockBlogId,mockCategory,mockStartDate,mockEndDate),nil)
 	req = req.WithContext(context.TODO())
 	req.Close = true
 	recorder := httptest.NewRecorder()
@@ -183,7 +192,7 @@ func TestGetBlogsError(t *testing.T) {
 	mockError := "WHERE conditions required"
 
 	mockProjection := &ProjectionMock{
-		GetPostsFunc: func(page, limit int, query string, sortOptions *[]string, filterOptions map[string]interface{}) ([]*api.Post, int64, error) {
+		GetPostsFunc: func(page, limit int, query string, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*api.Post, int64, error) {
 			if page != mockPage {
 				t.Fatalf("expected page to be %d, got %d",mockPage,page)
 			}

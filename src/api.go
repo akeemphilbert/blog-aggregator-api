@@ -46,9 +46,15 @@ func (a *API) GetPosts (e echo.Context) error {
 	var page int
 	var limit int
 	filters := make(map[string]interface{})
+	sorts := make(map[string]string)
 	//parse query parameters
 	page, _ = strconv.Atoi(e.QueryParam("page"))
 	limit, _ = strconv.Atoi(e.QueryParam("limit"))
+	//parse sort parameters
+	if viewsSort := e.QueryParam("views"); viewsSort != "" {
+		sorts["views"] = viewsSort
+	}
+	//parse query parameters
 	if blogId:=e.QueryParam("blog_id");blogId != "" {
 		filters["blog_id"] = blogId
 	}
@@ -70,7 +76,7 @@ func (a *API) GetPosts (e echo.Context) error {
 	}
 
 	for _,projection := range a.Application.Projections() {
-		posts, count, err := projection.(Projection).GetPosts(page,limit,"",nil,filters)
+		posts, count, err := projection.(Projection).GetPosts(page,limit,"",sorts,filters)
 		if err == nil {
 			return e.JSON(http.StatusOK,&PostList{
 				Page: page,
