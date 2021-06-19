@@ -57,7 +57,6 @@ jobs:
         cp NOTICE build/win32/NOTICE
         cp README.md build/win32/README.md
         cp build/blog-aggregator-windows-4.0-386.exe build/win32/blog-aggregator.exe
-        cp dll/x86/* build/win32
         chmod +x build/win32/blog-aggregator.exe
         cd build/win32
         zip -r  ../../blog-aggregator-win32.zip .
