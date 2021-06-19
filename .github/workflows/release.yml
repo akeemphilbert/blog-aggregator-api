@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    branches: [ main, release/* ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -v ./...
+    - uses: crazy-max/ghaction-xgo@v1
+      name: build linux and mac
+      with:
+        xgo_version: latest
+        go_version: 1.16.x
+        dest: build
+        prefix: blog-aggregator
+        targets: linux/386,linux/amd64,darwin/amd64,windows/386,windows/amd64
+        v: true
+        x: false
+        race: false
+        ldflags: -s -w
+        buildmode: default
+    - name: setup mac build
+      run: |
+        mkdir -p build/mac
+        cp LICENSE build/mac/LICENSE
+        cp NOTICE build/mac/NOTICE
+        cp README.md build/mac/README.md
+        cp api.yaml build/mac/api.yaml
+        cp build/blog-aggregator-darwin-10.12-amd64 build/mac/blog-aggregator
+        chmod +x build/mac/blog-aggregator
+        tar -czf blog-aggregator-mac-amd64.tar.gz -C build/mac .
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Mac OS
+        path: blog-aggregator-mac-amd64.tar.gz
+        
