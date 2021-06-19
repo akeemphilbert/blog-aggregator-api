@@ -10,6 +10,8 @@ components:
       properties:
         url:
           type: string
+      required:
+        - url
     SuccessResponse:
       type: object
       properties:
@@ -64,7 +66,7 @@ paths:
         200:
           description: Application Homepage
   /blog:
-    put: 
+    post: 
       operationId: Add Blog
       x-weos-config:
         handler: AddBlog
@@ -72,7 +74,7 @@ paths:
         description: Blog info that is submitted
         required: true
         content:
-          application/json:
+          application/x-www-form-urlencoded:
             schema:
               $ref: "#/components/schemas/AddBlogRequest"
       responses:

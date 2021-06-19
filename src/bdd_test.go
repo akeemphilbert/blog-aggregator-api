@@ -1,12 +1,12 @@
 package api_test
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -105,20 +105,22 @@ func hasABlog(arg1, arg2 string) error {
 }
 
 func hitsTheSubmitButton(arg1 string) error {
-	reqBytes, err := json.Marshal(request)
-	if err != nil {
-		return err
+	if trequest, ok := request.(*blogaggregatormodule.AddBlogRequest); ok {
+		formData := url.Values{
+			"url": {trequest.Url},
+		}
+		req := httptest.NewRequest(method,endpoint,strings.NewReader(formData.Encode()))
+		req = req.WithContext(context.TODO())
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.Close = true
+		rw := httptest.NewRecorder()
+		e.ServeHTTP(rw,req)
+		response = rw.Result()
+		defer response.Body.Close()
+		return nil
 	}
-	body := bytes.NewReader(reqBytes)
-	req := httptest.NewRequest(method,endpoint,body)
-	req = req.WithContext(context.TODO())
-	req.Close = true
-	rw := httptest.NewRecorder()
-	e.ServeHTTP(rw,req)
-	response = rw.Result()
-	defer response.Body.Close()
-
-	return err
+	
+	return fmt.Errorf("request is not an addblog request")
 }
 
 func isLoggedIn(arg1 string) error {
@@ -152,7 +154,7 @@ func isNotLoggedIn(arg1 string) error {
 
 func isOnTheBlogSubmitScreen(arg1 string) error {
 	request = &blogaggregatormodule.AddBlogRequest{}
-	method = "PUT"
+	method = "POST"
 	endpoint = "/blog"
 	return nil
 }

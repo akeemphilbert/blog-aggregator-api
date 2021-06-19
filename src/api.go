@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
@@ -25,12 +24,8 @@ type API struct {
 }
 
 func (a *API) AddBlog(e echo.Context) error {
-	var blogAddRequest *blogaggregatormodule.AddBlogRequest
-	err := json.NewDecoder(e.Request().Body).Decode(&blogAddRequest)
-	if err != nil {
-		return err
-	}
-	err = a.Application.Dispatcher().Dispatch(e.Request().Context(),blogaggregatormodule.AddBlogCommand(blogAddRequest.Url))
+	blogAddRequest := &blogaggregatormodule.AddBlogRequest{e.FormValue("url")}
+	err := a.Application.Dispatcher().Dispatch(e.Request().Context(),blogaggregatormodule.AddBlogCommand(blogAddRequest.Url))
 	if err != nil {
 		return weoscontroller.NewControllerError("Error creating blog",err,0)
 	}
