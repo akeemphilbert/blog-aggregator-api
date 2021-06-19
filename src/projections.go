@@ -47,6 +47,7 @@ type Post struct {
 	Content string
 	BlogID string `json:"blogId"`
 	Categories []*Category `json:"categories,omitempty" gorm:"many2many:post_categories;"`
+	Published string `json:"published"`
 	PublishDate time.Time
 	Views int
 }
@@ -235,6 +236,10 @@ func (p *GORMProjection) GetEventHandler() weos.EventHandler {
 				p.logger.Errorf("error unmarshalling event '%s'",err)
 			}
 			post.ID = blogaggregatormodule.GenerateID()
+			post.PublishDate, err = time.Parse("Mon, 2 Jan 2006 15:04:05 -0700",post.Published)
+			if err != nil {
+				p.logger.Errorf("error parsing publish date '%s'",err)
+			}
 			db := p.db.Create(post)
 			if db.Error != nil {
 				p.logger.Errorf("error creating post '%s'",err)

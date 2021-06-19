@@ -70,7 +70,6 @@ jobs:
         cp README.md build/win64/README.md
         cp build/blog-aggregator-windows-4.0-amd64.exe build/win64/blog-aggregator.exe
         chmod +x build/win64/blog-aggregator.exe
-        chmod +x build/win64/*.dll
         cd build/win64
         zip -r  ../../blog-aggregator-win64.zip .
     - uses: actions/upload-artifact@v2

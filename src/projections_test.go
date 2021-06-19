@@ -70,13 +70,15 @@ func TestProjection_GetPosts(t *testing.T) {
 		
 	}
 	db.Create(categories)
+	now := time.Now()
 	mockPosts := []*api.Post {
 		{
 			ID: "1",
 			Title: "Post 1",
 			BlogID: "123",
 			Categories: categories,
-			PublishDate: time.Now(),
+			PublishDate: now,
+			Published: now.Format("Mon, 2 Jan 2006 15:04:05 -0700"),
 			Views: 1,
 		},
 		{
@@ -84,21 +86,24 @@ func TestProjection_GetPosts(t *testing.T) {
 			Title: "Post 2",
 			BlogID: "123",
 			Categories: []*api.Category{categories[0]},
-			PublishDate: time.Now(),
+			PublishDate: now,
+			Published: time.Now().Format("Mon, 2 Jan 2006 15:04:05 -0700"),
 			Views: 10,
 		},
 		{
 			ID: "3",
 			Title: "Post 3",
 			BlogID: "456",
-			PublishDate: time.Now(),
+			PublishDate: now,
+			Published: time.Now().Format("Mon, 2 Jan 2006 15:04:05 -0700"),
 			Views: 8,
 		},
 		{
 			ID: "4",
 			Title: "Post 3",
 			BlogID: "123",
-			PublishDate: time.Now().AddDate(0,-2,0),
+			PublishDate: now.AddDate(0,-2,0),
+			Published: time.Now().AddDate(0,-2,0).Format("Mon, 2 Jan 2006 15:04:05 -0700"),
 			Views: 2,
 		},
 		{
@@ -111,7 +116,8 @@ func TestProjection_GetPosts(t *testing.T) {
 			ID: "6",
 			Title: "Post 5",
 			BlogID: "123",
-			PublishDate: time.Now().AddDate(0,-2,0),
+			PublishDate: now.AddDate(0,-2,0),
+			Published: now.AddDate(0,-2,0).Format("Mon, 2 Jan 2006 15:04:05 -0700"),
 			Views: 4,
 		},
 		{
@@ -119,6 +125,7 @@ func TestProjection_GetPosts(t *testing.T) {
 			Title: "Post 6",
 			BlogID: "123",
 			PublishDate: time.Now().AddDate(0,-2,0),
+			Published: time.Now().AddDate(0,-2,0).Format("Mon, 2 Jan 2006 15:04:05 -0700"),
 			Views: 7,
 		},
 		{
@@ -126,6 +133,7 @@ func TestProjection_GetPosts(t *testing.T) {
 			Title: "Post 7",
 			BlogID: "123",
 			PublishDate: time.Now().AddDate(0,-2,0),
+			Published: time.Now().AddDate(0,-2,0).Format("Mon, 2 Jan 2006 15:04:05 -0700"),
 			Views: 3,
 		},
 	}

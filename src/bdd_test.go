@@ -245,6 +245,10 @@ func theBlogPostsFromTheFeedShouldBeAddedToTheAggregator() error {
 	if createdBlog.Posts[0].ID == "" {
 		return fmt.Errorf("expected the post to have an id")
 	}
+	publishDate, err := time.Parse("Mon, 2 Jan 2006 15:04:05 -0700",createdBlog.Posts[0].Published)
+	if publishDate.Format(time.RFC3339) == "0001-01-01T00:00:00Z" {
+		return fmt.Errorf("expected the post to have a publish date")
+	}
 	return err
 }
 
@@ -535,6 +539,7 @@ func theAggregatorHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error 
 
 				if itemColumns[j] == "publishDate" {
 					item.PublishDate, err = time.Parse("Mon, 2 Jan 2006 15:04:05 -0700",column.Value)
+					item.Published = column.Value
 				}
 
 				if itemColumns[j] == "views" {
