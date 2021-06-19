@@ -79,7 +79,12 @@ func anAuthorShouldBeCreatedForEachAuthorInTheFeed() error {
 }
 
 func anErrorScreenShouldBeShown(arg1 string) error {
-	return godog.ErrPending
+	//check that the status code is correct
+	if response.StatusCode != http.StatusBadRequest {
+		return fmt.Errorf("expected the status code to be %d, got %d",http.StatusBadRequest,response.StatusCode)
+	}
+
+	return nil
 }
 
 func followsTheBlog(arg1, arg2 string) error {
@@ -233,6 +238,10 @@ func theBlogPostsFromTheFeedShouldBeAddedToTheAggregator() error {
 	}
 	if len(createdBlog.Posts) == 0 {
 		return fmt.Errorf("expected there to be posts with blog")
+	}
+
+	if createdBlog.Posts[0].ID == "" {
+		return fmt.Errorf("expected the post to have an id")
 	}
 	return err
 }
@@ -567,6 +576,11 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	blogAPI = &api.API{}
 	blogDataFetched := 0
 	blogAPI.Client = testhelpers.NewTestClient(func(req *http.Request) *http.Response {
+		if req.URL.Host == "google.com" {
+			resp := testhelpers.NewStringResponse(200,"<html><body>Not Blog</body></html>")
+			resp.Header.Set("Content-Type", "text/html")
+			return resp 
+		}
 		blogDataFetched += 1
 		//thi is fetching the blog page 
 		if blogDataFetched == 1 {

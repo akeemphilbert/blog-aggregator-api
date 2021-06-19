@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	blogaggregatormodule "github.com/wepala/blog-aggregator-module"
 	"github.com/wepala/weos"
@@ -26,17 +25,15 @@ type API struct {
 }
 
 func (a *API) AddBlog(e echo.Context) error {
-	e.Echo().Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"},
-		AllowHeaders: []string{"*"},
-		AllowMethods: []string{http.MethodPut},
-	}))
 	var blogAddRequest *blogaggregatormodule.AddBlogRequest
 	err := json.NewDecoder(e.Request().Body).Decode(&blogAddRequest)
 	if err != nil {
 		return err
 	}
-	a.Application.Dispatcher().Dispatch(e.Request().Context(),blogaggregatormodule.AddBlogCommand(blogAddRequest.Url))
+	err = a.Application.Dispatcher().Dispatch(e.Request().Context(),blogaggregatormodule.AddBlogCommand(blogAddRequest.Url))
+	if err != nil {
+		return weoscontroller.NewControllerError("Error creating blog",err,0)
+	}
 	return e.JSON(http.StatusCreated, "Blog Added")
 }
 //Get list of posts. 

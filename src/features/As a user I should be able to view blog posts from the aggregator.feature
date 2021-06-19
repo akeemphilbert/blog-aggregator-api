@@ -1,4 +1,3 @@
-@wip
 Feature: View blog posts
   
   This covers viewing posts from various bloggers as well as filtering posts 

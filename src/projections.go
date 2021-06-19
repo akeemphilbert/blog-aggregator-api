@@ -234,6 +234,7 @@ func (p *GORMProjection) GetEventHandler() weos.EventHandler {
 			if err != nil {
 				p.logger.Errorf("error unmarshalling event '%s'",err)
 			}
+			post.ID = blogaggregatormodule.GenerateID()
 			db := p.db.Create(post)
 			if db.Error != nil {
 				p.logger.Errorf("error creating post '%s'",err)
