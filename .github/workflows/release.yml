@@ -45,7 +45,7 @@ jobs:
         cp api.yaml build/mac/api.yaml
         cp build/blog-aggregator-darwin-10.12-amd64 build/mac/blog-aggregator
         chmod +x build/mac/blog-aggregator
-        tar -czf blog-aggregator-mac-amd64.tar.gz -C build/mac
+        tar -czf blog-aggregator-mac-amd64.tar.gz -C build/mac .
     - uses: actions/upload-artifact@v2
       with:
         name: Mac OS
