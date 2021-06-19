@@ -3,7 +3,7 @@ Feature: Submit blog to aggregator
   Background:
     Given a user named "Akeem"
     And "Akeem" has a blog "https://ak33m.com"
-    And the blog has a link to a feed "https://ak33m.com/index.xml"
+    And the blog has a link to a feed "/index.xml"
     And "Akeem" is logged in
     And the feed has posts
     | title       | content             | publish date                    | tags           | views      |
