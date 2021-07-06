@@ -26,6 +26,9 @@ var _ api.Projection = &ProjectionMock{}
 // 			GetBlogByURLFunc: func(url string) (*api.Blog, error) {
 // 				panic("mock out the GetBlogByURL method")
 // 			},
+// 			GetCategoriesFunc: func(page int, limit int, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*api.Category, int64, error) {
+// 				panic("mock out the GetCategories method")
+// 			},
 // 			GetEventHandlerFunc: func() weos.EventHandler {
 // 				panic("mock out the GetEventHandler method")
 // 			},
@@ -48,6 +51,9 @@ type ProjectionMock struct {
 	// GetBlogByURLFunc mocks the GetBlogByURL method.
 	GetBlogByURLFunc func(url string) (*api.Blog, error)
 
+	// GetCategoriesFunc mocks the GetCategories method.
+	GetCategoriesFunc func(page int, limit int, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*api.Category, int64, error)
+
 	// GetEventHandlerFunc mocks the GetEventHandler method.
 	GetEventHandlerFunc func() weos.EventHandler
 
@@ -68,6 +74,17 @@ type ProjectionMock struct {
 		GetBlogByURL []struct {
 			// URL is the url argument value.
 			URL string
+		}
+		// GetCategories holds details about calls to the GetCategories method.
+		GetCategories []struct {
+			// Page is the page argument value.
+			Page int
+			// Limit is the limit argument value.
+			Limit int
+			// SortOptions is the sortOptions argument value.
+			SortOptions map[string]string
+			// FilterOptions is the filterOptions argument value.
+			FilterOptions map[string]interface{}
 		}
 		// GetEventHandler holds details about calls to the GetEventHandler method.
 		GetEventHandler []struct {
@@ -93,6 +110,7 @@ type ProjectionMock struct {
 	}
 	lockGetBlogByID     sync.RWMutex
 	lockGetBlogByURL    sync.RWMutex
+	lockGetCategories   sync.RWMutex
 	lockGetEventHandler sync.RWMutex
 	lockGetPosts        sync.RWMutex
 	lockMigrate         sync.RWMutex
@@ -157,6 +175,49 @@ func (mock *ProjectionMock) GetBlogByURLCalls() []struct {
 	mock.lockGetBlogByURL.RLock()
 	calls = mock.calls.GetBlogByURL
 	mock.lockGetBlogByURL.RUnlock()
+	return calls
+}
+
+// GetCategories calls GetCategoriesFunc.
+func (mock *ProjectionMock) GetCategories(page int, limit int, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*api.Category, int64, error) {
+	if mock.GetCategoriesFunc == nil {
+		panic("ProjectionMock.GetCategoriesFunc: method is nil but Projection.GetCategories was just called")
+	}
+	callInfo := struct {
+		Page          int
+		Limit         int
+		SortOptions   map[string]string
+		FilterOptions map[string]interface{}
+	}{
+		Page:          page,
+		Limit:         limit,
+		SortOptions:   sortOptions,
+		FilterOptions: filterOptions,
+	}
+	mock.lockGetCategories.Lock()
+	mock.calls.GetCategories = append(mock.calls.GetCategories, callInfo)
+	mock.lockGetCategories.Unlock()
+	return mock.GetCategoriesFunc(page, limit, sortOptions, filterOptions)
+}
+
+// GetCategoriesCalls gets all the calls that were made to GetCategories.
+// Check the length with:
+//     len(mockedProjection.GetCategoriesCalls())
+func (mock *ProjectionMock) GetCategoriesCalls() []struct {
+	Page          int
+	Limit         int
+	SortOptions   map[string]string
+	FilterOptions map[string]interface{}
+} {
+	var calls []struct {
+		Page          int
+		Limit         int
+		SortOptions   map[string]string
+		FilterOptions map[string]interface{}
+	}
+	mock.lockGetCategories.RLock()
+	calls = mock.calls.GetCategories
+	mock.lockGetCategories.RUnlock()
 	return calls
 }
 

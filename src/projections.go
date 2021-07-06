@@ -19,6 +19,7 @@ type Projection interface {
 	GetBlogByID(id string) (*Blog, error)
 	GetBlogByURL(url string) (*Blog, error)
 	GetPosts(page int, limit int, query string, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*Post, int64, error)
+	GetCategories(page int, limit int, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*Category, int64, error)
 }
 
 type Blog struct {
@@ -79,6 +80,13 @@ func (p *GORMProjection) GetBlogByID(id string) (*Blog, error) {
 
 func (p *GORMProjection) GetBlogs() ([]*Blog, error) {
 	return nil, nil
+}
+
+func (p *GORMProjection) GetCategories(page int, limit int, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*Category, int64, error) {
+	var categories []*Category
+	var count int64
+	result := p.db.Debug().Scopes(filter(filterOptions), paginate(page, limit), sort(sortOptions)).Find(&categories).Offset(-1).Distinct("categories.id").Count(&count)
+	return categories, count, result.Error
 }
 
 func (p *GORMProjection) GetBlogByURL(url string) (*Blog, error) {
@@ -230,13 +238,26 @@ func (p *GORMProjection) GetEventHandler() weos.EventHandler {
 				p.logger.Errorf("error creating author '%s'", err)
 			}
 		case blogaggregatormodule.POST_CREATED:
-			var post *Post
-			err := json.Unmarshal(event.Payload, &post)
+			var postPayload *blogaggregatormodule.PostCreatedPayload
+			err := json.Unmarshal(event.Payload, &postPayload)
 			if err != nil {
 				p.logger.Errorf("error unmarshalling event '%s'", err)
 			}
-			post.ID = blogaggregatormodule.GenerateID()
-			post.PublishDate, err = time.Parse("Mon, 2 Jan 2006 15:04:05 -0700", post.Published)
+			post := &Post{
+				ID:          blogaggregatormodule.GenerateID(),
+				Title:       postPayload.Title,
+				Description: postPayload.Description,
+				Content:     postPayload.Content,
+				BlogID:      postPayload.BlogID,
+				Published:   postPayload.Published,
+			}
+			for _, category := range postPayload.Categories {
+				post.Categories = append(post.Categories, &Category{
+					Title:       category,
+					Description: category,
+				})
+			}
+			post.PublishDate, err = time.Parse("Mon, 2 Jan 2006 15:04:05 -0700", postPayload.Published)
 			if err != nil {
 				p.logger.Errorf("error parsing publish date '%s'", err)
 			}

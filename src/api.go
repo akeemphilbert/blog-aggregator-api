@@ -17,22 +17,23 @@ import (
 type API struct {
 	weoscontroller.API
 	Application weos.Application
-	Log weos.Log
-	DB *sql.DB
-	Client *http.Client
-	projection *GORMProjection
+	Log         weos.Log
+	DB          *sql.DB
+	Client      *http.Client
+	projection  *GORMProjection
 }
 
 func (a *API) AddBlog(e echo.Context) error {
 	blogAddRequest := &blogaggregatormodule.AddBlogRequest{e.FormValue("url")}
-	err := a.Application.Dispatcher().Dispatch(e.Request().Context(),blogaggregatormodule.AddBlogCommand(blogAddRequest.Url))
+	err := a.Application.Dispatcher().Dispatch(e.Request().Context(), blogaggregatormodule.AddBlogCommand(blogAddRequest.Url))
 	if err != nil {
-		return weoscontroller.NewControllerError("Error creating blog",err,0)
+		return weoscontroller.NewControllerError("Error creating blog", err, 0)
 	}
 	return e.JSON(http.StatusCreated, "Blog Added")
 }
-//Get list of posts. 
-func (a *API) GetPosts (e echo.Context) error {
+
+//Get list of posts.
+func (a *API) GetPosts(e echo.Context) error {
 	//initialize projection params
 	var lastError error
 	var page int
@@ -47,11 +48,11 @@ func (a *API) GetPosts (e echo.Context) error {
 		sorts["views"] = viewsSort
 	}
 	//parse query parameters
-	if blogId:=e.QueryParam("blog_id");blogId != "" {
+	if blogId := e.QueryParam("blog_id"); blogId != "" {
 		filters["blog_id"] = blogId
 	}
 
-	if category:=e.QueryParam("category");category != "" {
+	if category := e.QueryParam("category"); category != "" {
 		filters["category"] = category
 	}
 
@@ -67,14 +68,49 @@ func (a *API) GetPosts (e echo.Context) error {
 		page = 1
 	}
 
-	for _,projection := range a.Application.Projections() {
-		posts, count, err := projection.(Projection).GetPosts(page,limit,"",sorts,filters)
+	for _, projection := range a.Application.Projections() {
+		posts, count, err := projection.(Projection).GetPosts(page, limit, "", sorts, filters)
 		if err == nil {
-			return e.JSON(http.StatusOK,&PostList{
-				Page: page,
+			return e.JSON(http.StatusOK, &PostList{
+				Page:  page,
 				Limit: limit,
 				Total: count,
 				Items: posts,
+			})
+		} else {
+			lastError = err
+		}
+	}
+	return lastError
+}
+
+//Get list of categories
+func (a *API) GetCategories(e echo.Context) error {
+	//initialize projection params
+	var lastError error
+	var page int
+	var limit int
+	sorts := make(map[string]string)
+	//parse query parameters
+	page, _ = strconv.Atoi(e.QueryParam("page"))
+	limit, _ = strconv.Atoi(e.QueryParam("limit"))
+	//parse sort parameters
+	if viewsSort := e.QueryParam("views"); viewsSort != "" {
+		sorts["views"] = viewsSort
+	}
+
+	if page == 0 {
+		page = 1
+	}
+
+	for _, projection := range a.Application.Projections() {
+		categories, count, err := projection.(Projection).GetCategories(page, limit, sorts, nil)
+		if err == nil {
+			return e.JSON(http.StatusOK, &CategoryList{
+				Page:  page,
+				Limit: limit,
+				Total: count,
+				Items: categories,
 			})
 		} else {
 			lastError = err
@@ -88,7 +124,7 @@ func (a *API) Initialize() error {
 	//initialize app
 	if a.Client == nil {
 		a.Client = &http.Client{
-			Timeout: time.Second*10,
+			Timeout: time.Second * 10,
 		}
 	}
 	a.Application, err = weos.NewApplicationFromConfig(a.Config.ApplicationConfig, a.Log, a.DB, a.Client, nil)
@@ -117,6 +153,6 @@ func (a *API) Initialize() error {
 
 func New(port *string, apiConfig string) {
 	e := echo.New()
-	weoscontroller.Initialize(e,&API{},apiConfig)
-	e.Logger.Fatal(e.Start(":"+*port))
+	weoscontroller.Initialize(e, &API{}, apiConfig)
+	e.Logger.Fatal(e.Start(":" + *port))
 }

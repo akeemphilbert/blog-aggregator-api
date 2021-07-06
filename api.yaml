@@ -38,7 +38,7 @@ components:
         categories:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/Category"
     PostList:
       type: object
       properties:
@@ -52,6 +52,26 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Post"
+    Category:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+    CategoryList:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
 x-weos-config:
   logger:
     level: warn
@@ -125,3 +145,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PostList"
+  /categories:
+    parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: query
+        name: sort
+        schema:
+          type: array
+          items:
+            type: string
+    get:
+      operationId: List Categories
+      x-weos-config:
+        handler: GetCategories
+      responses:
+        200:
+          description: List of Categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryList"
