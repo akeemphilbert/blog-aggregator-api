@@ -47,6 +47,7 @@ type Post struct {
 	Description string      `json:"description"`
 	Content     string      `json:"content"`
 	BlogID      string      `json:"blogId"`
+	Link        string      `json:"link"`
 	Categories  []*Category `json:"categories,omitempty" gorm:"many2many:post_categories;"`
 	Published   string      `json:"published"`
 	PublishDate time.Time
@@ -249,6 +250,7 @@ func (p *GORMProjection) GetEventHandler() weos.EventHandler {
 				Description: postPayload.Description,
 				Content:     postPayload.Content,
 				BlogID:      postPayload.BlogID,
+				Link:        postPayload.Link,
 				Published:   postPayload.Published,
 			}
 			for _, category := range postPayload.Categories {
