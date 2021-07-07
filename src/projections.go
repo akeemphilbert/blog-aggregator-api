@@ -35,8 +35,8 @@ type Blog struct {
 
 type Author struct {
 	gorm.Model
-	Name   string
-	Email  string
+	Name   string `json:"name"`
+	Email  string `json:"email"`
 	BlogID string `json:"blogId"`
 }
 
@@ -57,8 +57,8 @@ type Post struct {
 
 type Category struct {
 	gorm.Model
-	Title       string
-	Description string
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
 	Posts       []*Post `json:"posts,omitempty" gorm:"many2many:post_categories;"`
 }
 
