@@ -161,6 +161,10 @@ func TestProjection_GetPosts(t *testing.T) {
 		if posts[0].Title != mockPosts[3].Title {
 			t.Errorf("expected the post in position %d to have title %s, got '%s'", 0, mockPosts[3].Title, posts[0].Title)
 		}
+
+		if posts[0].Blog.Title != mockBlogs[0].Title {
+			t.Errorf("expected the post in position %d to have blog title %s, got '%s'", 0, mockPosts[0].Blog.Title, posts[0].Blog.Title)
+		}
 	})
 	t.Run("get posts by category", func(t *testing.T) {
 		//run get posts

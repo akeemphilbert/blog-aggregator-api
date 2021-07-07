@@ -24,6 +24,13 @@ components:
           type: string
         code:
           type: string
+    Blog:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
     Post:
       type: object
       properties:
@@ -31,6 +38,8 @@ components:
           type: string
         description:
           type: string
+        blog:
+          $ref: "#/components/schemas/Blog"
         publishedDate: 
           type: string
         views:

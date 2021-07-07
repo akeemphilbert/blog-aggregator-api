@@ -47,6 +47,7 @@ type Post struct {
 	Description string      `json:"description"`
 	Content     string      `json:"content"`
 	BlogID      string      `json:"blogId"`
+	Blog        *Blog       `json:"blog"`
 	Link        string      `json:"link"`
 	Categories  []*Category `json:"categories,omitempty" gorm:"many2many:post_categories;"`
 	Published   string      `json:"published"`
@@ -107,7 +108,7 @@ func (p *GORMProjection) GetBlogByURL(url string) (*Blog, error) {
 func (p *GORMProjection) GetPosts(page int, limit int, query string, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*Post, int64, error) {
 	var posts []*Post
 	var count int64
-	result := p.db.Debug().Preload("Categories").Scopes(filter(filterOptions), paginate(page, limit), sort(sortOptions)).Find(&posts).Offset(-1).Distinct("posts.id").Count(&count)
+	result := p.db.Debug().Preload("Categories").Preload("Blog").Scopes(filter(filterOptions), paginate(page, limit), sort(sortOptions)).Find(&posts).Offset(-1).Distinct("posts.id").Count(&count)
 	return posts, count, result.Error
 }
 
