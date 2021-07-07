@@ -233,6 +233,28 @@ func TestProjection_GetPosts(t *testing.T) {
 		}
 	})
 
+	t.Run("get posts sorted by publishDate", func(t *testing.T) {
+		sorts := make(map[string]string)
+		sorts["publish_date"] = "asc"
+		posts, count, err := projection.GetPosts(1, 2, "", sorts, nil)
+		if err != nil {
+			t.Fatalf("unexpected error getting posts '%s'", err)
+		}
+
+		if count != int64(len(mockPosts)) {
+			t.Errorf("expected the number posts to be returned to be %d, got %d", len(mockPosts), count)
+		}
+
+		if len(posts) != 2 {
+			t.Fatalf("expected %d posts to be returned, got %d", 2, len(posts))
+		}
+
+		//check that the first result matches the item in the list having accounted for pagination
+		if posts[0].Title != mockPosts[4].Title {
+			t.Errorf("expected the post in position %d to have title %s, got '%s'", 0, mockPosts[4].Title, posts[0].Title)
+		}
+	})
+
 }
 
 func TestProjection_GetCategories(t *testing.T) {

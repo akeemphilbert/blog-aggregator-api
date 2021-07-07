@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	blogaggregatormodule "github.com/wepala/blog-aggregator-module"
@@ -116,7 +117,7 @@ func sort(order map[string]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		for key, value := range order {
 			//only support certain values since GORM doesn't protect the order function https://gorm.io/docs/security.html#SQL-injection-Methods
-			if (value != "asc" && value != "desc" && value != "") || (key != "views" && key != "publishDate") {
+			if (value != "asc" && value != "desc" && value != "") || (key != "views" && key != "publish_date") {
 				return db
 			}
 			db.Order(key + " " + value)
@@ -254,11 +255,12 @@ func (p *GORMProjection) GetEventHandler() weos.EventHandler {
 				Link:        postPayload.Link,
 				Published:   postPayload.Published,
 			}
-			for _, category := range postPayload.Categories {
-				post.Categories = append(post.Categories, &Category{
-					Title:       category,
-					Description: category,
-				})
+			for _, tag := range postPayload.Categories {
+				var category *Category
+				p.db.Where(&Category{
+					Title: strings.Trim(tag, " "),
+				}).FirstOrCreate(&category)
+				post.Categories = append(post.Categories, category)
 			}
 			post.PublishDate, err = time.Parse("Mon, 2 Jan 2006 15:04:05 -0700", postPayload.Published)
 			if err != nil {

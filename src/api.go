@@ -47,6 +47,10 @@ func (a *API) GetPosts(e echo.Context) error {
 	if viewsSort := e.QueryParam("views"); viewsSort != "" {
 		sorts["views"] = viewsSort
 	}
+
+	if dateSort := e.QueryParam("publish_date"); dateSort != "" {
+		sorts["publish_date"] = dateSort
+	}
 	//parse query parameters
 	if blogId := e.QueryParam("blog_id"); blogId != "" {
 		filters["blog_id"] = blogId
