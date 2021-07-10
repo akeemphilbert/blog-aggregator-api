@@ -100,6 +100,13 @@ func (p *GORMProjection) GetPosts (page int, limit int, query string, sortOption
 	result := p.db.Debug().Preload("Categories").Scopes(filter(filterOptions),paginate(page,limit),sort(sortOptions)).Find(&posts).Offset(-1).Distinct("posts.id").Count(&count)
 	return posts,count,result.Error
 }
+//GetAuthors get all the authors in the aggregator
+func (p *GORMProjection) GetAuthors(page int, limit int, query string, sortOptions map[string]string, filterOptions map[string]interface{}) ([]*Author, int64, error) {
+	var authors []*Author
+	var count int64
+	result := p.db.Debug().Scopes(filter(filterOptions),paginate(page,limit),sort(sortOptions)).Find(&authors).Offset(-1).Distinct("authors.id").Count(&count)
+	return authors,count,result.Error
+}
 
 func sort(order map[string]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {

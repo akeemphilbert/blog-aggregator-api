@@ -24,6 +24,26 @@ components:
           type: string
         code:
           type: string
+    Author:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+    AuthorList:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Author"
     Post:
       type: object
       properties:
@@ -125,3 +145,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PostList"
+  /authors:
+    parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: query
+        name: sort
+        schema:
+          type: array
+          items:
+            type: string
+      - in: query
+        name: blog_id
+        schema:
+          type: string
+      - in: query
+        name: category
+        schema: 
+          type: string
+    get:
+      operationId: List Authors
+      x-weos-config:
+        handler: GetAuthors
+      responses:
+        200:
+          description: List of Authors
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthorList"

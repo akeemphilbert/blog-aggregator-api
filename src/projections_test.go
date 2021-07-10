@@ -230,3 +230,128 @@ func TestProjection_GetPosts(t *testing.T) {
 	})
 	
 }
+
+func TestGetAuthors(t *testing.T) {
+	//setup gorm db connection
+	//TODO setup a way to test against multiple database
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("failed to connect database '%s'",err)
+	}
+
+	logger := &LogMock{
+		ErrorFunc: func(args ...interface{}) {},
+	}
+	
+	application := &ApplicationMock{
+		DBFunc: func() *gorm.DB {
+			return db
+		},
+		LoggerFunc: func() weos.Log {
+			return logger
+		},
+		AddProjectionFunc: func(projection weos.Projection) error {
+			return nil
+		},
+	}
+	
+	projection, err := api.NewProjection(application)
+	if err != nil {
+		t.Fatalf("unexpected error setting up projection '%s'",err)
+	}
+	//add blogs and blog posts to the database
+	projection.Migrate(context.Background())
+	//check that the database is called
+	if len(application.DBCalls()) == 0 {
+		t.Error("expected the db to be called")
+	}
+	mockBlogs := []*api.Blog{
+		{
+			ID: "123",
+			Title: "Some Blog 1",
+		},
+		{
+			ID: "456",
+			Title: "Some Blog 1",
+		},
+	}
+	db.Create(mockBlogs)
+	if db.Error != nil {
+		t.Fatalf("error setting up mock blogs '%s'",db.Error)
+	}
+	//setup some categories
+	categories := []*api.Category{
+		{
+			Title: "ar",
+		},
+		{
+			Title: "vue",
+		},
+		
+	}
+	db.Create(categories)
+
+	mockAuthors := []api.Author{
+		{
+			Model: gorm.Model{
+				ID: 1,
+			},
+			Name: "Some Author 1",
+			Email: "someone@example.org",
+		},
+		{
+			Model: gorm.Model{
+				ID: 2,
+			},
+			Name: "Some Author 2",
+			Email: "someon1@example.org",
+		},
+		{
+			Model: gorm.Model{
+				ID: 3,
+			},
+			Name: "Some Author 3",
+			Email: "someone2@example.org",
+		},
+		{
+			Model: gorm.Model{
+				ID: 4,
+			},
+			Name: "Some Author 4",
+			Email: "someone2@example.org",
+		},
+		{
+			Model: gorm.Model{
+				ID: 5,
+			},
+			Name: "Some Author 5",
+			Email: "someone2@example.org",
+		},
+		{
+			Model: gorm.Model{
+				ID: 6,
+			},
+			Name: "Some Author 6",
+			Email: "someone2@example.org",
+		},
+	}
+	db.Create(mockAuthors)
+	if db.Error != nil {
+		t.Fatalf("error setting up mock authors '%s'",db.Error)
+	}
+	t.Run("get authors", func(t *testing.T) {
+		//run get authors
+		authors, count, err := projection.GetAuthors(1,5,"",nil,nil)
+		if err != nil {
+			t.Fatalf("unexpected error getting authors '%s'",err)
+		}
+		if count != 6 {
+			t.Errorf("expected the number authors to be returned to be %d, got %d",6,count)
+		}
+
+		if len(authors) != 5 {
+			t.Fatalf("expected %d authors to be returned, got %d",5,len(authors))
+		}
+
+	})
+}

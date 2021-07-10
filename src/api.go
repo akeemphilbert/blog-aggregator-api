@@ -31,6 +31,21 @@ func (a *API) AddBlog(e echo.Context) error {
 	}
 	return e.JSON(http.StatusCreated, "Blog Added")
 }
+//Get list of authors
+func (a *API) GetAuthors(e echo.Context) error {
+	page,_ := strconv.Atoi(e.QueryParam("page"))
+	limit,_ := strconv.Atoi(e.QueryParam("limit"))
+
+	filters := make(map[string]interface{})
+	sorts := make(map[string]string)
+
+	authors,_, err := a.projection.GetAuthors(page,limit,"",sorts,filters)
+
+	if err != nil {
+		return weoscontroller.NewControllerError("Error getting authors",err,0)
+	}
+	return e.JSON(http.StatusOK, authors)
+}
 //Get list of posts. 
 func (a *API) GetPosts (e echo.Context) error {
 	//initialize projection params
