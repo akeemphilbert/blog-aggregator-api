@@ -44,6 +44,13 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Author"
+    Blog:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
     Post:
       type: object
       properties:
@@ -51,6 +58,8 @@ components:
           type: string
         description:
           type: string
+        blog:
+          $ref: "#/components/schemas/Blog"
         publishedDate: 
           type: string
         views:
@@ -58,7 +67,7 @@ components:
         categories:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/Category"
     PostList:
       type: object
       properties:
@@ -72,6 +81,26 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Post"
+    Category:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+    CategoryList:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
 x-weos-config:
   logger:
     level: warn
@@ -145,7 +174,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PostList"
-  /authors:
+  /categories:
     parameters:
       - in: query
         name: page
@@ -170,6 +199,18 @@ paths:
         schema: 
           type: string
     get:
+      operationId: List Categories
+      x-weos-config:
+        handler: GetCategories
+      responses:
+        200:
+          description: List of Categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryList"
+  /authors:
+    get:
       operationId: List Authors
       x-weos-config:
         handler: GetAuthors
@@ -180,3 +221,4 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthorList"
+    

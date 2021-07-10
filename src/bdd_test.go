@@ -22,26 +22,24 @@ import (
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
-type TestBlog struct
-{
-	Title string
-	URL string
+type TestBlog struct {
+	Title    string
+	URL      string
 	FeedLink string
 }
 
-type TestUser struct
-{
-	Name string
-	Site string
+type TestUser struct {
+	Name       string
+	Site       string
 	IsLoggedIn bool
-	Blog *TestBlog
+	Blog       *TestBlog
 }
 
 type FeedItem struct {
-	Title string 
+	Title       string
 	Description string
-	Link string
-	Category string
+	Link        string
+	Categories  string
 	PublishDate string
 }
 
@@ -54,7 +52,7 @@ var err error
 var blogAPI *api.API
 var request interface{}
 var endpoint string //the endpoint for the request
-var method string//the method of the request
+var method string   //the method of the request
 var e *echo.Echo
 var response *http.Response
 var createdBlog *api.Blog
@@ -81,7 +79,7 @@ func anAuthorShouldBeCreatedForEachAuthorInTheFeed() error {
 func anErrorScreenShouldBeShown(arg1 string) error {
 	//check that the status code is correct
 	if response.StatusCode != http.StatusBadRequest {
-		return fmt.Errorf("expected the status code to be %d, got %d",http.StatusBadRequest,response.StatusCode)
+		return fmt.Errorf("expected the status code to be %d, got %d", http.StatusBadRequest, response.StatusCode)
 	}
 
 	return nil
@@ -92,7 +90,7 @@ func followsTheBlog(arg1, arg2 string) error {
 }
 
 func hasABlog(arg1, arg2 string) error {
-	if user,ok := testUsers[arg1]; ok {
+	if user, ok := testUsers[arg1]; ok {
 		user.Blog = &TestBlog{
 			URL: arg2,
 		}
@@ -100,7 +98,7 @@ func hasABlog(arg1, arg2 string) error {
 		testBlog = user.Blog
 		return err
 	}
-	err = fmt.Errorf("user %s not defined",arg1)
+	err = fmt.Errorf("user %s not defined", arg1)
 	return err
 }
 
@@ -109,47 +107,47 @@ func hitsTheSubmitButton(arg1 string) error {
 		formData := url.Values{
 			"url": {trequest.Url},
 		}
-		req := httptest.NewRequest(method,endpoint,strings.NewReader(formData.Encode()))
+		req := httptest.NewRequest(method, endpoint, strings.NewReader(formData.Encode()))
 		req = req.WithContext(context.TODO())
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		req.Close = true
 		rw := httptest.NewRecorder()
-		e.ServeHTTP(rw,req)
+		e.ServeHTTP(rw, req)
 		response = rw.Result()
 		defer response.Body.Close()
 		return nil
 	}
-	
+
 	return fmt.Errorf("request is not an addblog request")
 }
 
 func isLoggedIn(arg1 string) error {
-	if user,ok := testUsers[arg1]; ok {
+	if user, ok := testUsers[arg1]; ok {
 		user.IsLoggedIn = true
 		return err
 	}
-	
-	err =  fmt.Errorf("user %s not defined",arg1)
+
+	err = fmt.Errorf("user %s not defined", arg1)
 	return err
 }
 
 func isLoggedInWithGoogle(arg1 string) error {
-	if user,ok := testUsers[arg1]; ok {
+	if user, ok := testUsers[arg1]; ok {
 		user.IsLoggedIn = true
 		return err
 	}
-	
-	err =  fmt.Errorf("user %s not defined",arg1)
+
+	err = fmt.Errorf("user %s not defined", arg1)
 	return err
 }
 
 func isNotLoggedIn(arg1 string) error {
-	if user,ok := testUsers[arg1]; ok {
+	if user, ok := testUsers[arg1]; ok {
 		user.IsLoggedIn = false
 		return nil
 	}
-	
-	return fmt.Errorf("user %s not defined",arg1)
+
+	return fmt.Errorf("user %s not defined", arg1)
 }
 
 func isOnTheBlogSubmitScreen(arg1 string) error {
@@ -230,7 +228,7 @@ func theBlogHasALinkToAFeed(arg1 string) error {
 	</body>
 	
 	</html>
-	`,arg1)
+	`, arg1)
 	return nil
 }
 
@@ -245,7 +243,7 @@ func theBlogPostsFromTheFeedShouldBeAddedToTheAggregator() error {
 	if createdBlog.Posts[0].ID == "" {
 		return fmt.Errorf("expected the post to have an id")
 	}
-	publishDate, err := time.Parse("Mon, 2 Jan 2006 15:04:05 -0700",createdBlog.Posts[0].Published)
+	publishDate, err := time.Parse("Mon, 2 Jan 2006 15:04:05 -0700", createdBlog.Posts[0].Published)
 	if publishDate.Format(time.RFC3339) == "0001-01-01T00:00:00Z" {
 		return fmt.Errorf("expected the post to have a publish date")
 	}
@@ -255,7 +253,7 @@ func theBlogPostsFromTheFeedShouldBeAddedToTheAggregator() error {
 func theBlogShouldBeAddedToTheAggregator() error {
 	//check that the status code is correct
 	if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf("expected the status code to be %d, got %d",http.StatusCreated,response.StatusCode)
+		return fmt.Errorf("expected the status code to be %d, got %d", http.StatusCreated, response.StatusCode)
 	}
 	//check that the blog was added correctly to the projection
 	projections := blogAPI.Application.Projections()
@@ -269,11 +267,11 @@ func theBlogShouldBeAddedToTheAggregator() error {
 	}
 
 	if createdBlog == nil {
-		return fmt.Errorf("blog with urls '%s' does not exist",request.(*blogaggregatormodule.AddBlogRequest).Url)
+		return fmt.Errorf("blog with urls '%s' does not exist", request.(*blogaggregatormodule.AddBlogRequest).Url)
 	}
 
 	if createdBlog.URL != testBlog.URL {
-		return fmt.Errorf("expected blog url to be %s, got %s",testBlog.URL,createdBlog.URL)
+		return fmt.Errorf("expected blog url to be %s, got %s", testBlog.URL, createdBlog.URL)
 	}
 	return err
 }
@@ -308,17 +306,17 @@ func theFeedHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error {
 		%s
 	  </channel>
 	</rss>`
-	//TODO loop through the table and add feed item to the feed 
+	//TODO loop through the table and add feed item to the feed
 	items := ""
-	itemColumns := make([]string,len(arg1.Rows[0].Cells))
-	for i,_ := range arg1.Rows {
+	itemColumns := make([]string, len(arg1.Rows[0].Cells))
+	for i, _ := range arg1.Rows {
 		if i == 0 {
-			for j,column := range arg1.Rows[i].Cells {
+			for j, column := range arg1.Rows[i].Cells {
 				itemColumns[j] = column.Value
 			}
 		} else {
 			feedItem := &FeedItem{}
-			for j,column := range arg1.Rows[i].Cells {
+			for j, column := range arg1.Rows[i].Cells {
 				if itemColumns[j] == "title" {
 					feedItem.Title = column.Value
 				}
@@ -330,20 +328,27 @@ func theFeedHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error {
 				if itemColumns[j] == "publish date" {
 					feedItem.PublishDate = column.Value
 				}
+
+				if itemColumns[j] == "tags" {
+					tags := strings.Split(column.Value, ",")
+					for _, tag := range tags {
+						feedItem.Categories = feedItem.Categories + fmt.Sprintf(`<category>%s</category>`, strings.Trim(tag, " "))
+					}
+				}
 			}
-			
+
 			items = items + fmt.Sprintf(`<item>
 			<title>%s</title>
 			<description>%s</description>
 			<link>%s</link>
+			%s
 			<pubDate>%s</pubDate>
-		  </item>`,feedItem.Title,feedItem.Link, feedItem.Description,feedItem.PublishDate)
+		  </item>`, feedItem.Title, feedItem.Description, feedItem.Link, feedItem.Categories, feedItem.PublishDate)
 
 		}
 	}
 
-
-	testFeed = fmt.Sprintf(testFeed,testBlog.Title,items)
+	testFeed = fmt.Sprintf(testFeed, testBlog.Title, items)
 	return err
 }
 
@@ -365,11 +370,11 @@ func marcusHasPermissionsToViewBlogPosts() error {
 }
 
 func marcusSelectsABlogWithId(arg1 string) error {
-	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?blog_id=%s",arg1),nil)
+	req := httptest.NewRequest("GET", fmt.Sprintf("/posts?blog_id=%s", arg1), nil)
 	req = req.WithContext(context.TODO())
 	req.Close = true
 	rw := httptest.NewRecorder()
-	e.ServeHTTP(rw,req)
+	e.ServeHTTP(rw, req)
 	response = rw.Result()
 	defer response.Body.Close()
 
@@ -377,11 +382,11 @@ func marcusSelectsABlogWithId(arg1 string) error {
 }
 
 func marcusSelectsACategory(arg1 string) error {
-	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?category=%s",arg1),nil)
+	req := httptest.NewRequest("GET", fmt.Sprintf("/posts?category=%s", arg1), nil)
 	req = req.WithContext(context.TODO())
 	req.Close = true
 	rw := httptest.NewRecorder()
-	e.ServeHTTP(rw,req)
+	e.ServeHTTP(rw, req)
 	response = rw.Result()
 	defer response.Body.Close()
 
@@ -390,7 +395,7 @@ func marcusSelectsACategory(arg1 string) error {
 
 func marcusShouldSeeAListOfBlogPosts(arg1 *messages.PickleStepArgument_PickleTable) error {
 	//loop through the selected posts and confirm they are in the table
-	itemColumns := make([]string,len(arg1.Rows[0].Cells))
+	itemColumns := make([]string, len(arg1.Rows[0].Cells))
 	rows := arg1.GetRows()
 
 	if response == nil {
@@ -404,19 +409,19 @@ func marcusShouldSeeAListOfBlogPosts(arg1 *messages.PickleStepArgument_PickleTab
 	}
 
 	if len(selectedPosts.Items) != len(rows)-1 {
-		return fmt.Errorf("expected %d posts, got %d",len(rows)-1,len(selectedPosts.Items))
+		return fmt.Errorf("expected %d posts, got %d", len(rows)-1, len(selectedPosts.Items))
 	}
 
-	for i,row := range rows {
+	for i, row := range rows {
 		if i == 0 {
-			for j,column := range arg1.Rows[i].Cells {
+			for j, column := range arg1.Rows[i].Cells {
 				itemColumns[j] = column.Value
 			}
 		} else {
-			for j,column := range row.Cells {
+			for j, column := range row.Cells {
 				if itemColumns[j] == "id" {
 					if selectedPosts.Items[i-1].ID != column.GetValue() {
-						return fmt.Errorf("expected '%s' to be '%s', got '%s'","id",column.GetValue(),selectedPosts.Items[i-1].ID)
+						return fmt.Errorf("expected '%s' to be '%s', got '%s'", "id", column.GetValue(), selectedPosts.Items[i-1].ID)
 					}
 				}
 			}
@@ -431,11 +436,11 @@ func marcusShouldSeePostsDaysFromTheCurrentDate(arg1 int) error {
 }
 
 func marcusViewsPostsByHighestViews() error {
-	req := httptest.NewRequest("GET","/posts?views=desc",nil)
+	req := httptest.NewRequest("GET", "/posts?views=desc", nil)
 	req = req.WithContext(context.TODO())
 	req.Close = true
 	rw := httptest.NewRecorder()
-	e.ServeHTTP(rw,req)
+	e.ServeHTTP(rw, req)
 	response = rw.Result()
 	defer response.Body.Close()
 
@@ -443,11 +448,11 @@ func marcusViewsPostsByHighestViews() error {
 }
 
 func marcusViewsRecentPosts() error {
-	req := httptest.NewRequest("GET",fmt.Sprintf("/posts?start_date=%s&end_date=%s",currentDate.AddDate(0,0,-30).Format("01/02/06"),currentDate.Format("01/02/06")),nil)
+	req := httptest.NewRequest("GET", fmt.Sprintf("/posts?start_date=%s&end_date=%s", currentDate.AddDate(0, 0, -30).Format("01/02/06"), currentDate.Format("01/02/06")), nil)
 	req = req.WithContext(context.TODO())
 	req.Close = true
 	rw := httptest.NewRecorder()
-	e.ServeHTTP(rw,req)
+	e.ServeHTTP(rw, req)
 	response = rw.Result()
 	defer response.Body.Close()
 
@@ -462,15 +467,15 @@ func theAggregatorHasBlogs(arg1 *messages.PickleStepArgument_PickleTable) error 
 	}
 	projection := projections[0].(api.Projection)
 	projection.Migrate(context.Background())
-	itemColumns := make([]string,len(arg1.Rows[0].Cells))
-	for i,_ := range arg1.Rows {
+	itemColumns := make([]string, len(arg1.Rows[0].Cells))
+	for i, _ := range arg1.Rows {
 		if i == 0 {
-			for j,column := range arg1.Rows[i].Cells {
+			for j, column := range arg1.Rows[i].Cells {
 				itemColumns[j] = column.Value
 			}
 		} else {
 			item := &api.Blog{}
-			for j,column := range arg1.Rows[i].Cells {
+			for j, column := range arg1.Rows[i].Cells {
 				if itemColumns[j] == "title" {
 					item.Title = column.Value
 				}
@@ -488,7 +493,7 @@ func theAggregatorHasBlogs(arg1 *messages.PickleStepArgument_PickleTable) error 
 				}
 			}
 			blogsFixture[item.ID] = item
-			//add blogs to database 
+			//add blogs to database
 			blogAPI.Application.DB().Create(item)
 		}
 	}
@@ -497,18 +502,18 @@ func theAggregatorHasBlogs(arg1 *messages.PickleStepArgument_PickleTable) error 
 }
 
 func theAggregatorHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error {
-	itemColumns := make([]string,len(arg1.Rows[0].Cells))
-	for i,_ := range arg1.Rows {
+	itemColumns := make([]string, len(arg1.Rows[0].Cells))
+	for i, _ := range arg1.Rows {
 		if i == 0 {
-			for j,column := range arg1.Rows[i].Cells {
+			for j, column := range arg1.Rows[i].Cells {
 				itemColumns[j] = column.Value
 			}
 		} else {
 			item := &api.Post{}
 			var blogId string
-			
+
 			var ok bool
-			for j,column := range arg1.Rows[i].Cells {
+			for j, column := range arg1.Rows[i].Cells {
 				if itemColumns[j] == "id" {
 					item.ID = column.Value
 				}
@@ -527,18 +532,18 @@ func theAggregatorHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error 
 				}
 
 				if itemColumns[j] == "tags" {
-					categories := strings.Split(column.Value,",")
-					for _,categoryValue := range categories {
+					categories := strings.Split(column.Value, ",")
+					for _, categoryValue := range categories {
 						var category *api.Category
 						blogAPI.Application.DB().Where(&api.Category{
-							Title: strings.Trim(categoryValue," "),
+							Title: strings.Trim(categoryValue, " "),
 						}).FirstOrCreate(&category)
 						item.Categories = append(item.Categories, category)
 					}
 				}
 
 				if itemColumns[j] == "publishDate" {
-					item.PublishDate, err = time.Parse("Mon, 2 Jan 2006 15:04:05 -0700",column.Value)
+					item.PublishDate, err = time.Parse("Mon, 2 Jan 2006 15:04:05 -0700", column.Value)
 					item.Published = column.Value
 				}
 
@@ -546,21 +551,41 @@ func theAggregatorHasPosts(arg1 *messages.PickleStepArgument_PickleTable) error 
 					item.Views, err = strconv.Atoi(column.Value)
 				}
 			}
-			if _,ok = blogsFixture[blogId]; !ok {
-				return fmt.Errorf("trying to add posts to blog %s that doesn't exist",blogId)
+			if _, ok = blogsFixture[blogId]; !ok {
+				return fmt.Errorf("trying to add posts to blog %s that doesn't exist", blogId)
 			}
 
 			blogAPI.Application.DB().Create(item)
 		}
 	}
-	
 
 	return nil
 }
 
 func theCurrentDateIs(arg1 string) error {
-	currentDate,err  = time.Parse("01/02/06",arg1)
+	currentDate, err = time.Parse("01/02/06", arg1)
 	return err
+}
+
+func theBlogPostTagsShouldBeAddedToTheGlobalListOfTags() error {
+	//check that the blog was added correctly to the projection
+	projections := blogAPI.Application.Projections()
+	if len(projections) == 0 {
+		return fmt.Errorf("there are no projections configured")
+	}
+	projection := projections[0].(api.Projection)
+	allCategories, totalCategories, err := projection.GetCategories(1, 2, nil, nil)
+	if err != nil {
+		return err
+	}
+
+	if totalCategories != 3 {
+		return fmt.Errorf("expected %d categories, got %d", 3, totalCategories)
+	}
+	if len(allCategories) != 2 {
+		return fmt.Errorf("expected %d catgories on the current page, got %d", 2, len(allCategories))
+	}
+	return nil
 }
 
 func reset(*godog.Scenario) {
@@ -578,29 +603,29 @@ func reset(*godog.Scenario) {
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
-	err = os.Remove("test.db")//TODO hack to reset the database between runs
+	err = os.Remove("test.db") //TODO hack to reset the database between runs
 	e = echo.New()
 	blogAPI = &api.API{}
 	blogDataFetched := 0
 	blogAPI.Client = testhelpers.NewTestClient(func(req *http.Request) *http.Response {
 		if req.URL.Host == "google.com" {
-			resp := testhelpers.NewStringResponse(200,"<html><body>Not Blog</body></html>")
+			resp := testhelpers.NewStringResponse(200, "<html><body>Not Blog</body></html>")
 			resp.Header.Set("Content-Type", "text/html")
-			return resp 
+			return resp
 		}
 		blogDataFetched += 1
-		//thi is fetching the blog page 
+		//thi is fetching the blog page
 		if blogDataFetched == 1 {
-			resp := testhelpers.NewBytesResponse(200,[]byte(testBlogPage))
+			resp := testhelpers.NewBytesResponse(200, []byte(testBlogPage))
 			resp.Header.Set("Content-Type", "text/html")
 			return resp
 		}
 
-		resp := testhelpers.NewBytesResponse(200,[]byte(testFeed))
+		resp := testhelpers.NewBytesResponse(200, []byte(testFeed))
 		resp.Header.Set("Content-Type", "application/rss+xml")
 		return resp
 	})
-	weoscontroller.Initialize(e,blogAPI,"../api.yaml")
+	weoscontroller.Initialize(e, blogAPI, "../api.yaml")
 
 	ctx.BeforeScenario(reset)
 	ctx.Step(`^a pingback url should be generated$`, aPingbackUrlShouldBeGenerated)
@@ -638,17 +663,18 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the aggregator has blogs$`, theAggregatorHasBlogs)
 	ctx.Step(`^the aggregator has posts$`, theAggregatorHasPosts)
 	ctx.Step(`^The current date is "([^"]*)"$`, theCurrentDateIs)
+	ctx.Step(`^the blog post tags should be added to the global list of tags$`, theBlogPostTagsShouldBeAddedToTheGlobalListOfTags)
 }
 
 func TestBDD(t *testing.T) {
 	status := godog.TestSuite{
-		Name: "BDD Tests",
+		Name:                "BDD Tests",
 		ScenarioInitializer: InitializeScenario,
 		Options: &godog.Options{
 			Format: "pretty",
 		},
 	}.Run()
 	if status != 0 {
-		t.Errorf("there was an error running tests, exit code %d",status)
+		t.Errorf("there was an error running tests, exit code %d", status)
 	}
 }
