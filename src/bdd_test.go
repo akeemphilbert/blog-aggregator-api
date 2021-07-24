@@ -579,8 +579,8 @@ func theBlogPostTagsShouldBeAddedToTheGlobalListOfTags() error {
 		return err
 	}
 
-	if totalCategories != 3 {
-		return fmt.Errorf("expected %d categories, got %d", 3, totalCategories)
+	if totalCategories != 2 {
+		return fmt.Errorf("expected %d categories, got %d", 2, totalCategories)
 	}
 	if len(allCategories) != 2 {
 		return fmt.Errorf("expected %d catgories on the current page, got %d", 2, len(allCategories))
