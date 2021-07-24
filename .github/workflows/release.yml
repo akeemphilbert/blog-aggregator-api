@@ -3,7 +3,20 @@ name: Release
 on:
   push:
     branches: [ main, release/* ]
-
+env:
+  SLACK_CHANNEL: wecrm
+  SLACK_USERNAME: WeOS CRM API
+  SLACK_ICON: https://github.com/wepala.png?size=48
+  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+  SLACK_FOOTER: copyright 2021 Wepala
+  AWS_DEFAULT_REGION: us-east-1
+  AWS_REGION: us-east-1
+  AWS_DEFAULT_OUTPUT: json
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGISTRY_URL: ${{ secrets.DOCKER_REGISTRY_URL }}
+  AWS_CLUSTER_NAME: ${{ secrets.AWS_CLUSTER_ARN }}
+  AWS_ROLE: ${{ secrets.AWS_ROLE }}
 jobs:
 
   build:
@@ -21,6 +34,41 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+    - name: Setup build variables
+      id: setup
+      run: |
+        TICKET=$(echo ${GITHUB_REF} | sed -e "s/refs\/heads\///g" | sed -e "s/feature\///g")
+        echo "::set-output name=today::$(date +'%Y%m%d%H')"
+        echo "::set-output name=ticket::${TICKET}"
+    - name: Create build
+      run: |
+        env GOOS=linux GARCH=amd64 CGO_ENABLED=0 go build -o blog-aggregator -tags server
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        role-to-assume: ${{ env.AWS_ROLE }}
+        role-duration-seconds: 1200
+        role-session-name: blogaggergator{{ github.sha }}
+        role-skip-session-tagging: true
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build and tag the image
+      run: |
+        docker build \
+          -t ${AWS_REGISTRY_URL}:${{ github.sha }} \
+          -t ${AWS_REGISTRY_URL}:${{ steps.setup.outputs.ticket }} \
+          --target app .
+    - name: Push to ECR
+      run: |
+        docker push ${AWS_REGISTRY_URL}:${{ github.sha }}
+        docker push ${AWS_REGISTRY_URL}:${{ steps.setup.outputs.ticket }}
+    - name: Update ECS service
+      run: |
+        aws ecs update-service --service blogs{{ steps.setup.outputs.ticket }}-service --cluster ${AWS_CLUSTER_NAME} --force-new-deployment
     - uses: crazy-max/ghaction-xgo@v1
       name: build linux and mac
       with:
@@ -108,4 +156,3 @@ jobs:
       with:
         name: Linux 64 Bit
         path: blog-aggregator-linux-amd64.tar.gz
-        
