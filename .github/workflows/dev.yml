@@ -42,7 +42,7 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
         role-to-assume: ${{ env.AWS_ROLE }}
         role-duration-seconds: 1200
-        role-session-name: blogaggergator{{ github.sha }}
+        role-session-name: blogaggergator${{ github.sha }}
         role-skip-session-tagging: true
     - name: Login to Amazon ECR
       id: login-ecr
@@ -59,6 +59,6 @@ jobs:
         docker push ${AWS_REGISTRY_URL}:${{ steps.setup.outputs.ticket }}
     - name: Update ECS service
       run: |
-        aws ecs update-service --service blogs{{ steps.setup.outputs.ticket }}-service --cluster ${AWS_CLUSTER_NAME} --force-new-deployment
+        aws ecs update-service --service blogs${{ steps.setup.outputs.ticket }}-service --cluster ${AWS_CLUSTER_NAME} --force-new-deployment
 
         
