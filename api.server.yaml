@@ -1,0 +1,230 @@
+openapi: 3.0.2
+info:
+  title: Blog Aggregator Rest API
+  version: 0.1.0
+  description: REST API for interacting with the Blog Aggregator
+components:
+  schemas:
+    AddBlogRequest:
+      type: object
+      properties:
+        url:
+          type: string
+      required:
+        - url
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+    Author:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+    AuthorList:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Author"
+    Blog:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+    Post:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        blog:
+          $ref: "#/components/schemas/Blog"
+        publishedDate: 
+          type: string
+        views:
+          type: integer
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+    PostList:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Post"
+    Category:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+    CategoryList:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+x-weos-config:
+  logger:
+    level: warn
+  database:
+    driver: postgres
+    host: ${POSTGRES_HOST}
+    database: ${POSTGRES_DB}
+    port: ${POSTGRES_PORT}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    max-open: 10
+    max-idle: 3
+paths:
+  /:
+    get:
+      operationId: Homepage
+      responses:
+        200:
+          description: Application Homepage
+  /blog:
+    post: 
+      operationId: Add Blog
+      x-weos-config:
+        handler: AddBlog
+      requestBody:
+        description: Blog info that is submitted
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/AddBlogRequest"
+      responses:
+        201:
+          description: Add Blog to Aggregator
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        400:
+          description: Invalid blog submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /posts:
+    parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: query
+        name: sort
+        schema:
+          type: array
+          items:
+            type: string
+      - in: query
+        name: blog_id
+        schema:
+          type: string
+      - in: query
+        name: category
+        schema: 
+          type: string
+    get:
+      operationId: List Posts
+      x-weos-config:
+        handler: GetPosts
+      responses:
+        200:
+          description: List of Posts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostList"
+  /categories:
+    parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: query
+        name: sort
+        schema:
+          type: array
+          items:
+            type: string
+      - in: query
+        name: blog_id
+        schema:
+          type: string
+      - in: query
+        name: category
+        schema: 
+          type: string
+    get:
+      operationId: List Categories
+      x-weos-config:
+        handler: GetCategories
+      responses:
+        200:
+          description: List of Categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryList"
+  /authors:
+    get:
+      operationId: List Authors
+      x-weos-config:
+        handler: GetAuthors
+      responses:
+        200:
+          description: List of Authors
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthorList"
+    

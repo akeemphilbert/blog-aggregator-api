@@ -3,7 +3,7 @@ FROM alpine:3.11 as app
 RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
-COPY api.yaml /app/api.yaml
+COPY api.yaml /app/api.server.yaml
 COPY blog-aggregator /app/blog-aggregator
 COPY LICENSE /app/LICENSE
 COPY NOTICE /app/NOTICE
