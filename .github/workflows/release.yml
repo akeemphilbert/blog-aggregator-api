@@ -30,9 +30,6 @@ jobs:
       with:
         go-version: 1.16
 
-    - name: Build
-      run: go build -v ./...
-
     - name: Test
       run: go test -v ./...
     - name: Setup build variables
@@ -43,7 +40,7 @@ jobs:
         echo "::set-output name=ticket::${TICKET}"
     - name: Create build
       run: |
-        env GOOS=linux GARCH=amd64 CGO_ENABLED=0 go build -o blog-aggregator -tags server
+        env GOOS=linux GARCH=amd64 CGO_ENABLED=0 go build -v -o blog-aggregator -tags server
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
