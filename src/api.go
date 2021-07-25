@@ -31,18 +31,19 @@ func (a *API) AddBlog(e echo.Context) error {
 	}
 	return e.JSON(http.StatusCreated, "Blog Added")
 }
+
 //Get list of authors
 func (a *API) GetAuthors(e echo.Context) error {
-	page,_ := strconv.Atoi(e.QueryParam("page"))
-	limit,_ := strconv.Atoi(e.QueryParam("limit"))
+	page, _ := strconv.Atoi(e.QueryParam("page"))
+	limit, _ := strconv.Atoi(e.QueryParam("limit"))
 
 	filters := make(map[string]interface{})
 	sorts := make(map[string]string)
 
-	authors,_, err := a.projection.GetAuthors(page,limit,"",sorts,filters)
+	authors, _, err := a.projection.GetAuthors(page, limit, "", sorts, filters)
 
 	if err != nil {
-		return weoscontroller.NewControllerError("Error getting authors",err,0)
+		return weoscontroller.NewControllerError("Error getting authors", err, 0)
 	}
 	return e.JSON(http.StatusOK, authors)
 }
@@ -136,6 +137,11 @@ func (a *API) GetCategories(e echo.Context) error {
 		}
 	}
 	return lastError
+}
+
+// health check handler
+func (a *API) HealthCheck(e echo.Context) error {
+	return e.JSON(200, "GOOD")
 }
 
 func (a *API) Initialize() error {
