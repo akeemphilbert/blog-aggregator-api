@@ -14,8 +14,8 @@ env:
   AWS_DEFAULT_OUTPUT: json
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  AWS_REGISTRY_URL: ${{ secrets.DOCKER_REGISTRY_URL }}
-  AWS_CLUSTER_NAME: ${{ secrets.AWS_CLUSTER_ARN }}
+  AWS_REGISTRY_URL: ${{ secrets.AWS_REGISTRY_URL }}
+  AWS_CLUSTER_NAME: ${{ secrets.AWS_CLUSTER_NAME }}
   AWS_ROLE: ${{ secrets.AWS_ROLE }}
 jobs:
 
